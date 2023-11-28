@@ -17,14 +17,16 @@
 1. [管理器开源地址](https://github.com/jark006/freezeitapp)
 
 1. [模块包发布地址](https://github.com/jark006/freezeitRelease)
+1. [改版开源地址](https://github.com/XSheeee/FreezeitVS)
 
 ### 其他链接
 
 [教程 Tutorials](https://jark006.github.io/FreezeitIntroduction/) |
-[酷安 @JARK006](https://www.coolapk.com/u/1212220) |
+[酷安 @JARK006(原版作者)](https://www.coolapk.com/u/1212220) |
+[酷安 @XShee(本改版作者)](https://www.coolapk.com/u/20552855)
 [QQ频道 冻它模块](https://qun.qq.com/qqweb/qunpro/share?_wv=3&_wwv=128&appChannel=share&inviteCode=1W6opB7&appChannel=share&businessType=9&from=246610&biz=ka) |
 [Telegram Group](https://t.me/+sjDX1oTk31ZmYjY1) |
-[蓝奏云 密码: dy6i](https://jark006.lanzout.com/b017oz9if) 
+[蓝奏云 密码: dy6i(原版下载)](https://jark006.lanzout.com/b017oz9if) 
 
 ---
 
