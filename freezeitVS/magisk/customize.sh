@@ -1,8 +1,8 @@
 $BOOTMODE || abort "- 🚫 安装失败，仅支持在 Magisk 或 KernelSU 下安装"
 
 kernelVersionCode=$(uname -r |awk -F '.' '{print $1*100+$2}')
-if [ $kernelVersionCode -lt 510 ];then
-    echo "- 🚫 安装失败，仅支持内核版本 5.10 或以上"
+if [ $kernelVersionCode -lt 414 ];then
+    echo "- 🚫 安装失败，仅支持内核版本 4.14 或以上"
     echo "- 🚫 本机内核版本 $(uname -r)"
     abort
 fi
@@ -114,9 +114,9 @@ else
     fi
 fi
 
-# 仅限 MIUI 12~15
+# 仅限 MIUI 12~hyperOS
 MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
-if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 15 ]; then
+if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 816 ]; then
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop

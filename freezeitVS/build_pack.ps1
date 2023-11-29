@@ -15,13 +15,12 @@ $version = ($moduleProp | Where-Object { $_ -match "version=" }).split('=')[1]
 $versionCode = ($moduleProp | Where-Object { $_ -match "versionCode=" }).split('=')[1]
 $zipFile = "${id}_v${version}.zip"
 
-$releaseDir = "D:/Project-github/freezeitRelease"
-$ndkPath = "D:/AndroidSDK/ndk/26.1.10909125"
+$releaseDir = "D:\freezeit\freezeitRelease"
+$ndkPath = "D:\android-ndk-r26b-windows\android-ndk-r26b"
 
 $clang = "${ndkPath}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe"
 $sysroot = "--sysroot=${ndkPath}/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
-$cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-exceptions -fno-rtti -DNDEBUG -fPIE"
-
+$cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-rtti -DNDEBUG -fPIE"
 
 log "Compiler... ARM64"
 $target = "--target=aarch64-none-linux-android31"

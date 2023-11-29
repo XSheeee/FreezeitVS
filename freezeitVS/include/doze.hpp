@@ -221,7 +221,7 @@ public:
                 uidTimeSort.reserve(32);
                 for (const auto& [uid, timeList] : updateUidTime()) {
                     int delta = (timeList.total - timeList.lastTotal); // 毫秒
-                    if (delta <= 100)continue; // 过滤 100毫秒
+                    if (delta <= 80)continue; // 过滤 80毫秒
                     uidTimeSort.emplace_back(st{ uid, delta });
                 }
 
