@@ -29,9 +29,11 @@
     <None Include="magisk\uninstall.sh">
       <Filter>magisk</Filter>
     </None>
-    <None Include="build_ARM64.ps1" />
     <None Include="build_X64.ps1" />
     <None Include="README.md" />
+    <None Include="build_ARM64.ps1">
+      <Filter>src</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />

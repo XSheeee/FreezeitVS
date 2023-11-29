@@ -282,15 +282,12 @@ public:
                 usleep(1000 * 100);//暂停100ms,然后再次尝试杀进程，防止毒瘤
                 try
                 {
-                    freezeit.debugFmt("尝试再次终结防止毒瘤");
                     kill(pid, SIGKILL);
                 }
                 catch (const std::exception&)
                 {
-                    freezeit.debugFmt("失败，跳过");
                     continue;//报错忽略
                 }
-                freezeit.debugFmt("成功!");
             }
 
             return;

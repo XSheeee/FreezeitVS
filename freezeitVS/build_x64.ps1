@@ -12,7 +12,7 @@ function abort($logContent){
 $ndkPath = "D:\android-ndk-r26b-windows\android-ndk-r26b"
 $clang = "${ndkPath}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe"
 $sysroot = "--sysroot=${ndkPath}/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
-$cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-exceptions -fno-rtti -DNDEBUG -fPIE"
+$cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-rtti -DNDEBUG -fPIE"
 
 $target = "--target=x86_64-none-linux-android31"
 log "Compiler X64 ..."
