@@ -1,3 +1,7 @@
+###v1.0.5
+	融合酷安@Kimmulla的freezerV1泄露补丁，非miui/hyperos安装
+
+
 ###v1.0.3
 	增加新冻它白名单
 
