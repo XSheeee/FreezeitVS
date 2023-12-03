@@ -65,6 +65,13 @@ if [ "$output" == "Success" ]; then
     echo ""
 fi
 
+output=$(pm uninstall io.github.jark006.freezeit)
+if [ "$output" == "Success" ]; then
+    echo "- !!! ⚠️ 冻它APP已更换新包名, 旧版APP已卸载"
+    echo "- !!! ⚠️ 安装完毕后, 请到 LSPosed 重新启用冻它"
+    echo ""
+fi
+
 ORG_appcfg="/data/adb/modules/freezeit/appcfg.txt"
 ORG_applabel="/data/adb/modules/freezeit/applabel.txt"
 ORG_settings="/data/adb/modules/freezeit/settings.db"
@@ -75,7 +82,7 @@ for path in $ORG_appcfg $ORG_applabel $ORG_settings; do
     fi
 done
 
-output=$(pm list packages io.github.jark006.freezeit)
+output=$(pm list packages io.github.xsheeee.freezeit)
 if [ ${#output} -lt 2 ]; then
     echo "- !!! ⚠️ 首次安装, 安装完毕后, 请到LSPosed管理器启用冻它, 然后再重启"
 fi
@@ -113,9 +120,9 @@ else
     fi
 fi
 
-# 仅限 MIUI 12~15
+# 仅限 MIUI 12~hyper
 MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
-if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 15 ]; then
+if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop

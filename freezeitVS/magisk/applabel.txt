@@ -256,4 +256,4 @@ com.mediatek.duraspeed####快霸
 com.android.uwb.resources####System UWB Resources
 com.android.adservices.api####Android AdServices
 com.android.safetycenter.resources####安全中心资源
-io.github.jark006.freezeit####冻它
+io.github.xsheeee.freezeit####冻它

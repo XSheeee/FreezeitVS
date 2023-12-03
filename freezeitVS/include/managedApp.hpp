@@ -22,6 +22,7 @@ private:
     map<int, cfgStruct> cfgTemp;
 
     const unordered_set<string> whiteListForce{
+            "io.github.xsheeee.freezeit"
             "com.xiaomi.mibrain.speech",            // 系统语音引擎
             "com.xiaomi.scanner",                   // 小爱视觉
             "com.xiaomi.xmsf",                      // Push

@@ -24,6 +24,7 @@
     <None Include="build_X64.ps1" />
     <None Include="cpp.hint" />
     <None Include="magisk\customize.sh" />
+    <None Include="magisk\freezerlmk.sh" />
     <None Include="magisk\module.prop" />
     <None Include="magisk\service.sh" />
     <None Include="magisk\system.prop" />
