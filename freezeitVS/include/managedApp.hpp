@@ -71,6 +71,7 @@ private:
             "com.oppo.launcher",
 
             "me.weishu.kernelsu",                   // KernelSU
+            "io.github.xsheeee.freezeit",           //冻它
             "top.canyie.dreamland.manager",         // Dreamland
 
             "com.miui.home",
@@ -364,6 +365,7 @@ private:
         // "com.google.android.gms",               // GMS 服务
         // "com.google.android.gsf",               // Google 服务框架
         "com.mi.health",                        // 小米运动健康
+        "io.github.xsheeee.freezeit",           //冻它
         "com.tencent.mm.wxa.sce",               // 微信小程序   三星OneUI专用
 
         "com.onlyone.onlyonestarter",           // 三星系应用

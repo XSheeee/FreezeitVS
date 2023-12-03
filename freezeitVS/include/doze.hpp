@@ -265,7 +265,7 @@ public:
     }
 
     bool checkIfNeedToEnter() {
-        constexpr int TIMEOUT = 3 * 60;
+        constexpr int TIMEOUT = 60;
         static int secCnt = 30;
 
         if (isScreenOffStandby || ++secCnt < TIMEOUT)
@@ -285,7 +285,7 @@ public:
 
         // 如果系统之前已经自行进入轻度Doze, 退出Doze的瞬间（此时可能还没亮屏）导致现在才执行时间判断
         // 此时进入Doze不合理，需等等，再确认一遍
-        usleep(1000 * 200); // 休眠 200ms
+        usleep(1000 * 150); // 休眠 200ms
         if (isInteractive()) {
             if (settings.enableScreenDebug)
                 freezeit.log("确认新状态：已亮屏或充电中, 退出息屏");

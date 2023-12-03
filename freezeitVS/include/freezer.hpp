@@ -150,8 +150,8 @@ public:
             freezeit.log("Freezer类型已设为 V2(UID)");
         }
         //else if (mountFreezerV1()) { // 部分V1不能内存释放，不再进行自动选择，只能手动选择
-        //	workMode = WORK_MODE::V1;
-        //	freezeit.log("Freezer类型已设为 V1(FROZEN)");
+        	//workMode = WORK_MODE::V1;
+        	//freezeit.log("Freezer类型已设为 V1(FROZEN)");
         //}
         else {
             workMode = WORK_MODE::GLOBAL_SIGSTOP;
@@ -1427,15 +1427,15 @@ public:
     }
 
     void binderInit(const char* driver) {
-        if (freezeit.kernelVersion.main <= 4) { // 4.xx 内核不支持
-            freezeit.logFmt("内核版本低(%d.%d.%d)，不支持 BINDER_FREEZER 特性", 
-                freezeit.kernelVersion.main, freezeit.kernelVersion.sub, freezeit.kernelVersion.patch);
-            return;
-        }
 
         bs.fd = open(driver, O_RDWR | O_CLOEXEC);
         if (bs.fd < 0) {
             freezeit.logFmt("Binder初始化失败 路径打开失败：[%s] [%d:%s]", driver, errno, strerror(errno));
+            if (freezeit.kernelVersion.main <= 4) { // 4.xx 内核不支持
+                freezeit.logFmt("内核版本低(%d.%d.%d)，不支持 BINDER_FREEZER 特性",
+                    freezeit.kernelVersion.main, freezeit.kernelVersion.sub, freezeit.kernelVersion.patch);
+                return;
+            }
             return;
         }
 
