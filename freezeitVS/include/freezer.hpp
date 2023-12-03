@@ -86,7 +86,7 @@ public:
 
         getVisibleAppBuff = make_unique<char[]>(GET_VISIBLE_BUF_SIZE);
 
-        binderInit("/dev/binder");
+        //binderInit("/dev/binder");
 
         threads.emplace_back(thread(&Freezer::cpuSetTriggerTask, this)); //监控前台
         threads.emplace_back(thread(&Freezer::cycleThreadFunc, this));
@@ -407,7 +407,7 @@ public:
         case FREEZE_MODE::FREEZER: 
         case FREEZE_MODE::FREEZER_BREAK: {
             if (workMode != WORK_MODE::GLOBAL_SIGSTOP) {
-                const int res = handleBinder(appInfo, freeze);
+                const int res = -1;
                 if (res < 0 && freeze && appInfo.isTolerant)
                     return res;
                 handleFreezer(appInfo, freeze);
@@ -418,7 +418,7 @@ public:
 
         case FREEZE_MODE::SIGNAL:
         case FREEZE_MODE::SIGNAL_BREAK: {
-            const int res = handleBinder(appInfo, freeze);
+            const int res = -1;
             if (res < 0 && freeze && appInfo.isTolerant)
                 return res;
             handleSignal(appInfo, freeze ? SIGSTOP : SIGCONT);
@@ -472,8 +472,121 @@ public:
         END_TIME_COUNT;
         return appInfo.pids.size();
     }
+    // return 0成功  小于0为操作失败的pid
+    /*int handleBinder(const appInfoStruct& appInfo, const bool freeze) {
+        if (bs.fd <= 0)return 0;
 
+        START_TIME_COUNT;
 
+        // https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5434
+        // 100ms 等待传输事务完成
+        binder_freeze_info binderInfo{ 0, static_cast<uint32_t>(freeze ? 1 : 0), 100 };
+        binder_frozen_status_info statusInfo = { 0, 0, 0 };
+
+        if (freeze) { // 冻结
+            binderInfo.enable = 1;
+            for (size_t i = 0; i < appInfo.pids.size(); i++) {
+                binderInfo.pid = appInfo.pids[i];
+                if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+                    int errorCode = errno;
+
+                    // ret == EAGAIN indicates that transactions have not drained.
+                    // Call again to poll for completion.
+                    if (errorCode != EAGAIN)
+                        freezeit.logFmt("冻结 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+
+                    // 解冻已经被冻结binder的进程
+                    binderInfo.enable = 0;
+                    for (size_t j = 0; j < i; j++) {
+                        binderInfo.pid = appInfo.pids[j];
+
+                        //TODO 如果解冻失败？
+                        if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+                            errorCode = errno;
+                            freezeit.logFmt("撤消冻结：解冻恢复Binder发生错误：[%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+                        }
+                    }
+                    return -appInfo.pids[i];
+                }
+            }
+
+            usleep(1000 * 200);
+
+            for (size_t i = 0; i < appInfo.pids.size(); i++) {
+                statusInfo.pid = appInfo.pids[i];
+                if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &statusInfo) < 0) {
+                    int errorCode = errno;
+                    freezeit.logFmt("获取 [%s:%d] Binder 状态错误 ErrroCode:%d", appInfo.label.c_str(), statusInfo.pid, errorCode);
+                }
+                else if (statusInfo.sync_recv & 2) { // 冻结后发现仍有传输事务
+                    freezeit.logFmt("%s 仍有Binder传输事务", appInfo.label.c_str());
+
+                    // 解冻已经被冻结binder的进程
+                    binderInfo.enable = 0;
+                    for (size_t j = 0; j < i; j++) {
+                        binderInfo.pid = appInfo.pids[j];
+
+                        //TODO 如果解冻失败？
+                        if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+                            int errorCode = errno;
+                            freezeit.logFmt("撤消冻结：解冻恢复Binder发生错误：[%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+                        }
+                    }
+                    return -appInfo.pids[i];
+                }
+
+            }
+        }
+        else { // 解冻
+            for (size_t i = 0; i < appInfo.pids.size(); i++) {
+                statusInfo.pid = appInfo.pids[i];
+                if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &statusInfo) < 0) {
+                    int errorCode = errno;
+                    freezeit.logFmt("获取 [%s:%d] Binder 状态错误 ErrroCode:%d", appInfo.label.c_str(), statusInfo.pid, errorCode);
+                }
+                else {
+                    // 注意各个二进制位差别
+                    // https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/jni/com_android_server_am_CachedAppOptimizer.cpp;l=489
+                    // https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5467
+                    if (statusInfo.sync_recv & 1) {
+                        freezeit.logFmt("%s 冻结期间存在 同步传输 Sync transactions, 考虑杀掉进程", appInfo.label.c_str());
+                        //TODO 要杀掉进程
+                    }
+                    if (statusInfo.async_recv & 1) {
+                        freezeit.logFmt("%s 冻结期间存在 异步传输（不重要）", appInfo.label.c_str());
+                    }
+                    if (statusInfo.sync_recv & 2) {
+                        freezeit.logFmt("%s 冻结期间存在“未完成”传输（不重要）TXNS_PENDING", appInfo.label.c_str());
+                    }
+                }
+            }
+
+            binderInfo.enable = 0;
+            for (size_t i = 0; i < appInfo.pids.size(); i++) {
+                binderInfo.pid = appInfo.pids[i];
+                if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+                    int errorCode = errno;
+                    freezeit.logFmt("解冻 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+
+                    char tmp[32];
+                    snprintf(tmp, sizeof(tmp), "/proc/%d", binderInfo.pid);
+
+                    if (access(tmp, F_OK)) {
+                        freezeit.logFmt("进程已不在 [%s] %u", appInfo.label.c_str(), binderInfo.pid);
+                    }
+                    //TODO 再解冻一次，若失败，考虑杀死？
+                    else if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+                        errorCode = errno;
+                        freezeit.logFmt("重试解冻 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+                    }
+                }
+            }
+        }
+
+        END_TIME_COUNT;
+        return 0;
+    }
+    */
     // 重新压制第三方。 白名单, 前台, 待冻结列队 都跳过
     void checkReFreeze() {
         START_TIME_COUNT;
@@ -1183,7 +1296,7 @@ public:
                 START_TIME_COUNT;
                 if (doze.isScreenOffStandby) {
                     if (doze.checkIfNeedToExit()) {
-                        curForegroundApp = move(curFgBackup); // recovery
+                        curForegroundApp = std::move(curFgBackup); // recovery
                         updateAppProcess();
                         setWakeupLockByLocalSocket(WAKEUP_LOCK::DEFAULT);
                     }
@@ -1207,7 +1320,7 @@ public:
 
             // 2分钟一次 在亮屏状态检测是否已经息屏  息屏状态则检测是否再次强制进入深度Doze
             if (doze.checkIfNeedToEnter()) {
-                curFgBackup = move(curForegroundApp); //backup
+                curFgBackup = std::move(curForegroundApp); //backup
                 updateAppProcess();
                 setWakeupLockByLocalSocket(WAKEUP_LOCK::IGNORE);
             }
@@ -1305,128 +1418,15 @@ public:
     // https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5615
     // https://elixir.bootlin.com/linux/latest/source/drivers/android/binder.c#L5412
 
-    // return 0成功  小于0为操作失败的pid
-    int handleBinder(const appInfoStruct& appInfo, const bool freeze) {
-        if (bs.fd <= 0)return 0;
 
-        START_TIME_COUNT;
 
-        // https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5434
-        // 100ms 等待传输事务完成
-        binder_freeze_info binderInfo{ 0, static_cast<uint32_t>(freeze ? 1 : 0), 100 };
-        binder_frozen_status_info statusInfo = { 0, 0, 0 };
-
-        if (freeze) { // 冻结
-            binderInfo.enable = 1;
-            for (size_t i = 0; i < appInfo.pids.size(); i++) {
-                binderInfo.pid = appInfo.pids[i];
-                if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
-                    int errorCode = errno;
-
-                    // ret == EAGAIN indicates that transactions have not drained.
-                    // Call again to poll for completion.
-                    if (errorCode != EAGAIN)
-                        freezeit.logFmt("冻结 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
-
-                    // 解冻已经被冻结binder的进程
-                    binderInfo.enable = 0;
-                    for (size_t j = 0; j < i; j++) {
-                        binderInfo.pid = appInfo.pids[j];
-
-                        //TODO 如果解冻失败？
-                        if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
-                            errorCode = errno;
-                            freezeit.logFmt("撤消冻结：解冻恢复Binder发生错误：[%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
-                        }
-                    }
-                    return -appInfo.pids[i];
-                }
-            }
-
-            usleep(1000 * 200);
-
-            for (size_t i = 0; i < appInfo.pids.size(); i++) {
-                statusInfo.pid = appInfo.pids[i];
-                if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &statusInfo) < 0) {
-                    int errorCode = errno;
-                    freezeit.logFmt("获取 [%s:%d] Binder 状态错误 ErrroCode:%d", appInfo.label.c_str(), statusInfo.pid, errorCode);
-                }
-                else if (statusInfo.sync_recv & 2) { // 冻结后发现仍有传输事务
-                    freezeit.logFmt("%s 仍有Binder传输事务", appInfo.label.c_str());
-
-                    // 解冻已经被冻结binder的进程
-                    binderInfo.enable = 0;
-                    for (size_t j = 0; j < i; j++) {
-                        binderInfo.pid = appInfo.pids[j];
-
-                        //TODO 如果解冻失败？
-                        if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
-                            int errorCode = errno;
-                            freezeit.logFmt("撤消冻结：解冻恢复Binder发生错误：[%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
-                        }
-                    }
-                    return -appInfo.pids[i];
-                }
-
-            }
-        }
-        else { // 解冻
-            for (size_t i = 0; i < appInfo.pids.size(); i++) {
-                statusInfo.pid = appInfo.pids[i];
-                if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &statusInfo) < 0) {
-                    int errorCode = errno;
-                    freezeit.logFmt("获取 [%s:%d] Binder 状态错误 ErrroCode:%d", appInfo.label.c_str(), statusInfo.pid, errorCode);
-                }
-                else {
-                    // 注意各个二进制位差别
-                    // https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/jni/com_android_server_am_CachedAppOptimizer.cpp;l=489
-                    // https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5467
-                    if (statusInfo.sync_recv & 1) {
-                        freezeit.logFmt("%s 冻结期间存在 同步传输 Sync transactions, 考虑杀掉进程", appInfo.label.c_str());
-                        //TODO 要杀掉进程
-                    }
-                    if (statusInfo.async_recv & 1) {
-                        freezeit.logFmt("%s 冻结期间存在 异步传输（不重要）", appInfo.label.c_str());
-                    }
-                    if (statusInfo.sync_recv & 2) {
-                        freezeit.logFmt("%s 冻结期间存在“未完成”传输（不重要）TXNS_PENDING", appInfo.label.c_str());
-                    }
-                }
-            }
-
-            binderInfo.enable = 0;
-            for (size_t i = 0; i < appInfo.pids.size(); i++) {
-                binderInfo.pid = appInfo.pids[i];
-                if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
-                    int errorCode = errno;
-                    freezeit.logFmt("解冻 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
-
-                    char tmp[32];
-                    snprintf(tmp, sizeof(tmp), "/proc/%d", binderInfo.pid);
-
-                    if (access(tmp, F_OK)) {
-                        freezeit.logFmt("进程已不在 [%s] %u", appInfo.label.c_str(), binderInfo.pid);
-                    }
-                    //TODO 再解冻一次，若失败，考虑杀死？
-                    else if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
-                        errorCode = errno;
-                        freezeit.logFmt("重试解冻 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
-                    }
-                }
-            }
-        }
-
-        END_TIME_COUNT;
-        return 0;
-    }
-
-    void binder_close() {
+    /*void binder_close() {
         munmap(bs.mapped, bs.mapSize);
         close(bs.fd);
         bs.fd = -1;
     }
-
-    void binderInit(const char* driver) {
+    */
+    /*void binderInit(const char* driver) {
 
         bs.fd = open(driver, O_RDWR | O_CLOEXEC);
         if (bs.fd < 0) {
@@ -1472,6 +1472,6 @@ public:
             bs.fd = -1;
             return;
         }
-    }
+    }*/
     
 };

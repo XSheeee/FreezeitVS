@@ -50,6 +50,9 @@
     <None Include="magisk\freezerlmk.sh">
       <Filter>magisk</Filter>
     </None>
+    <None Include="post-fs-data.sh">
+      <Filter>magisk</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />

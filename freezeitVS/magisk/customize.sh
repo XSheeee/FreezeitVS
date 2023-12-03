@@ -128,6 +128,13 @@ else
     rm "$MODPATH"/system.prop
 fi
 
+Color_VersionCode=$(ro.build.version.opporom)
+if [ "$Color_VersionCode"]; then
+    echo "- 已配置禁用Hans参数"
+else
+    rm "$MODPATH"/post-fs-data.sh
+fi
+
 echo ""
 cat "$MODPATH"/changelog.txt
 echo ""

@@ -59,7 +59,7 @@ else
 
     # 带一个任意参数将开启文件式日志 [ /sdcard/Android/freezeit.log ]
     # "$MODDIR"/freezeit 0
-    "$MODDIR"/freezeit 0
+    "$MODDIR"/freezeit
 
     chmod a+x "$MODDIR"/freezerlmk.sh
     sleep 60
