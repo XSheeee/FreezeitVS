@@ -570,7 +570,7 @@ public:
             freezeit.logFmt("%s() 返回数据异常 recvLen[%d]", __FUNCTION__, recvLen);
             if (recvLen > 0 && recvLen < 64 * 4)
                 freezeit.logFmt("DumpHex: %s", Utils::bin2Hex(buff, recvLen).c_str());
-            END_TIME_COUNT;
+            ((void)0);
             return 0;
         }
         END_TIME_COUNT;
