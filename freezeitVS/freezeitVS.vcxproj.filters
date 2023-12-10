@@ -50,9 +50,6 @@
     <None Include="magisk\freezerlmk.sh">
       <Filter>magisk</Filter>
     </None>
-    <None Include="post-fs-data.sh">
-      <Filter>magisk</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -121,6 +118,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="include\freezer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\doze.hpp">

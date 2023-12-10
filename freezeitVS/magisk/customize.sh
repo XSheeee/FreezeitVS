@@ -82,7 +82,7 @@ for path in $ORG_appcfg $ORG_applabel $ORG_settings; do
     fi
 done
 
-output=$(pm list packages io.github.xsheeee.freezeit)
+output=$(pm list packages io.github.jark006.freezeit)
 if [ ${#output} -lt 2 ]; then
     echo "- !!! ⚠️ 首次安装, 安装完毕后, 请到LSPosed管理器启用冻它, 然后再重启"
 fi
@@ -102,7 +102,7 @@ if [ "$output" == "Success" ]; then
     rm -rf "$apkPath"
 else
     echo "- 冻它APP 安装失败, 原因: [$output] 尝试卸载再安装..."
-    pm uninstall io.github.jark006.freezeit
+    pm uninstall io.github.xsheeee.freezeit
     sleep 1
     output=$(pm install -r -f "$apkPath" 2>&1)
     if [ "$output" == "Success" ]; then

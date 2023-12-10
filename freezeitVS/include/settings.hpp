@@ -43,7 +43,7 @@ private:
             0,  //[28]
             0,  //[29]
             0,  //[30] Doze调试日志
-            0,  //[31]
+            1,  //[31]
             0,  //[32]
     };
 
@@ -64,14 +64,14 @@ public:
     uint8_t& enableWindows = settingsVar[18];          // 扩展前台
 
     uint8_t& enableScreenDebug = settingsVar[30];        // Doze调试日志
-
+    uint8_t& enableBinderFreezer = settingsVar[32];
     Settings& operator=(Settings&&) = delete;
 
     Settings(Freezeit& freezeit) : freezeit(freezeit) {
 
         settingsPath = freezeit.modulePath + "/settings.db";
 
-        auto fd = open(settingsPath.c_str(), O_RDONLY);
+        auto fd = open(settingsPath.c_str(), 00000000);
         if (fd > 0) {
             uint8_t tmp[SETTINGS_SIZE] = { 0 };
             int readSize = read(fd, tmp, SETTINGS_SIZE);
@@ -223,6 +223,7 @@ public:
         case 28: //
         case 29: //
         case 30: // Doze调试日志
+        case 31: //开关binder冻结
         {
             if (val != 0 && val != 1)
                 return snprintf(replyBuf, REPLY_BUF_SIZE, "开关值错误, 正常范围:0/1, 欲设为:%d", val);

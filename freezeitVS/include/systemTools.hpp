@@ -3,12 +3,10 @@
 #include "utils.hpp"
 #include "settings.hpp"
 #include "freezeit.hpp"
-
 class SystemTools {
 private:
     Freezeit& freezeit;
     Settings& settings;
-
     thread sndThread;
 
     constexpr static uint32_t COLOR_E = 0XFF22BB44; // efficiency
@@ -55,7 +53,6 @@ public:
 
         getCpuTempPath();
         InitCPU();
-
         InitLMK();
 
         sndThread = thread(&SystemTools::sndThreadFunc, this);
@@ -116,12 +113,16 @@ public:
         const char* lmkdParameter[] = {
                 "ro.lmk.low", "1001",
                 "ro.lmk.medium", "1001",
-                "ro.lmk.critical", "100",
-                "ro.lmk.use_minfree_levels", "true",
+                "ro.lmk.critical", "1001",
+                "ro.lmk.use_minfree_levels", "false",
                 "ro.lmk.use_new_strategy", "true",
                 "ro.lmk.swap_free_low_percentage", "10",
                 "sys.lmk.minfree_levels",
                 "8192:0,12288:100,16384:200,32768:250,55296:900,80640:950",
+                "ro.lmk.debug","false",
+                "ro.config.low_ram","false",
+                "ro.lmk.kill_heaviest_task","false",
+                "ro.lmk.kill_timeout_ms","1001",
         };
         // const char* adj = "0,100,200,250,900,950"; //另有 0,1,2,4,9,12
         const char minfree[] = "8192,12288,16384,32768,55296,80640";

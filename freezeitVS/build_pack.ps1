@@ -72,8 +72,8 @@ log "Creating... update json"
 $jsonContent = "{
     `"version`": `"$version`",
     `"versionCode`": $versionCode,
-    `"zipUrl`": `"https://ghproxy.com/https://raw.githubusercontent.com/jark006/freezeitRelease/main/$zipFile`",
-    `"changelog`": `"https://ghproxy.com/https://raw.githubusercontent.com/jark006/freezeitRelease/main/changelog.txt`"`n}"
+    `"zipUrl`": `"https://ghproxy.com/https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/$zipFile`",
+    `"changelog`": `"https://ghproxy.com/https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/changelog.txt`"`n}"
 $jsonContent > ${releaseDir}/update.json
 
 Copy-Item README.md  ${releaseDir}/README.md -force

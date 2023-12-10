@@ -86,8 +86,8 @@ public:
 
         getVisibleAppBuff = make_unique<char[]>(GET_VISIBLE_BUF_SIZE);
 
-        //binderInit("/dev/binder");
-
+        binderInit("/dev/binder");
+        
         threads.emplace_back(thread(&Freezer::cpuSetTriggerTask, this)); //监控前台
         threads.emplace_back(thread(&Freezer::cycleThreadFunc, this));
 
@@ -407,7 +407,7 @@ public:
         case FREEZE_MODE::FREEZER: 
         case FREEZE_MODE::FREEZER_BREAK: {
             if (workMode != WORK_MODE::GLOBAL_SIGSTOP) {
-                const int res = -1;
+                const int res = handleBinder(appInfo, freeze);
                 if (res < 0 && freeze && appInfo.isTolerant)
                     return res;
                 handleFreezer(appInfo, freeze);
@@ -418,7 +418,7 @@ public:
 
         case FREEZE_MODE::SIGNAL:
         case FREEZE_MODE::SIGNAL_BREAK: {
-            const int res = -1;
+            const int res = handleBinder(appInfo,freeze);
             if (res < 0 && freeze && appInfo.isTolerant)
                 return res;
             handleSignal(appInfo, freeze ? SIGSTOP : SIGCONT);
@@ -473,7 +473,8 @@ public:
         return appInfo.pids.size();
     }
     // return 0成功  小于0为操作失败的pid
-    /*int handleBinder(const appInfoStruct& appInfo, const bool freeze) {
+    int handleBinder(const appInfoStruct& appInfo, const bool freeze) {
+        if (settings.enableBinderFreezer == 0)return -1;
         if (bs.fd <= 0)return 0;
 
         START_TIME_COUNT;
@@ -586,7 +587,7 @@ public:
         END_TIME_COUNT;
         return 0;
     }
-    */
+    
     // 重新压制第三方。 白名单, 前台, 待冻结列队 都跳过
     void checkReFreeze() {
         START_TIME_COUNT;
@@ -1420,22 +1421,19 @@ public:
 
 
 
-    /*void binder_close() {
+    void binder_close() {
         munmap(bs.mapped, bs.mapSize);
         close(bs.fd);
         bs.fd = -1;
     }
-    */
-    /*void binderInit(const char* driver) {
-
+    
+    void binderInit(const char* driver) {
+        if (settings.enableBinderFreezer == 0) {
+            return;
+        }
         bs.fd = open(driver, O_RDWR | O_CLOEXEC);
         if (bs.fd < 0) {
-            freezeit.logFmt("Binder初始化失败 路径打开失败：[%s] [%d:%s]", driver, errno, strerror(errno));
-            if (freezeit.kernelVersion.main <= 4) { // 4.xx 内核不支持
-                freezeit.logFmt("内核版本低(%d.%d.%d)，不支持 BINDER_FREEZER 特性",
-                    freezeit.kernelVersion.main, freezeit.kernelVersion.sub, freezeit.kernelVersion.patch);
-                return;
-            }
+            freezeit.logFmt("Binder初始化失败 路径打开失败(许是内核版本低)[%s] [%d:%s]", driver, errno, strerror(errno));
             return;
         }
 
@@ -1472,6 +1470,6 @@ public:
             bs.fd = -1;
             return;
         }
-    }*/
+    };
     
 };

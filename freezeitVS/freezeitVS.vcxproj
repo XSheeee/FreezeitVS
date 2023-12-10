@@ -34,7 +34,6 @@
     <None Include="note\new_icon.psd" />
     <None Include="note\termux设置.md" />
     <None Include="note\冻它2.6.2 _冻结操作逻辑路线.xlsx" />
-    <None Include="post-fs-data.sh" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -62,6 +61,7 @@
     <Image Include="note\冻它冻结说明.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\freezer.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
