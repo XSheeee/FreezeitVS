@@ -1,3 +1,8 @@
+###v1.2.3###
+	修改一堆微小逻辑
+	照着3.0.0选择性抄了一部分
+	改了下localSocketRequests()
+
 ###v1.2.2###
 	小修改开关binder_freezer逻辑
 	安装时自动是否禁用millet(保留其他属性)

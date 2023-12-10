@@ -123,6 +123,7 @@ fi
 # 仅限 MIUI 12~hyper
 MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
 if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
+    rm "$MODPATH"/system1.prop
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop
