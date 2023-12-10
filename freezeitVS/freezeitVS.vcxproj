@@ -24,7 +24,6 @@
     <None Include="build_X64.ps1" />
     <None Include="cpp.hint" />
     <None Include="magisk\customize.sh" />
-    <None Include="magisk\freezerlmk.sh" />
     <None Include="magisk\module.prop" />
     <None Include="magisk\service.sh" />
     <None Include="magisk\system.prop" />
@@ -34,6 +33,7 @@
     <None Include="note\new_icon.psd" />
     <None Include="note\termux设置.md" />
     <None Include="note\冻它2.6.2 _冻结操作逻辑路线.xlsx" />
+    <None Include="system1.prop" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -61,7 +61,6 @@
     <Image Include="note\冻它冻结说明.png" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\freezer.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>

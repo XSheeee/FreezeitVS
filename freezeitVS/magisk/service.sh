@@ -42,7 +42,7 @@ if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
 
     # 带一个任意参数将开启文件式日志 [ /sdcard/Android/freezeit.log ]
     # "$MODDIR"/freezeit 0
-    "$MODDIR"/freezeit 0
+    "$MODDIR"/freezeit
 
 else
     echo "[$(date "+%Y-%m-%d %H:%M:%S")] 进入桌面, 30秒后将启动冻它" >>"$bootLogPath"
@@ -60,14 +60,4 @@ else
     # 带一个任意参数将开启文件式日志 [ /sdcard/Android/freezeit.log ]
     # "$MODDIR"/freezeit 0
     "$MODDIR"/freezeit
-
-    chmod a+x "$MODDIR"/freezerlmk.sh
-    sleep 60
-    _fv1path=$(mount -t cgroup | awk '/freezer/ {print $3}')
-
-    echo 1 > "$_fv1path"/frozen/freezer.killable
-    echo 1 > "$_fv1path"/unfrozen/freezer.killable
-    #启动freezer low memory killer 解冻
-    sleep 10
-    nohup sh "$MODDIR"/freezerlmk.sh& > /dev/null echo $! > /sdcard/flmkpid.txt
 fi

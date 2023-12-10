@@ -474,7 +474,7 @@ public:
     }
     // return 0成功  小于0为操作失败的pid
     int handleBinder(const appInfoStruct& appInfo, const bool freeze) {
-        if (settings.enableBinderFreezer == 0)return -1;
+        if (not settings.enableBinderFreezer)return -1;
         if (bs.fd <= 0)return 0;
 
         START_TIME_COUNT;

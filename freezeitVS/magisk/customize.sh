@@ -126,15 +126,9 @@ if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop
+    mv "$MODPATH"/system1.prop system.prop
+    echo "-已删除禁用millet参数"
 fi
-
-Color_VersionCode=$(ro.build.version.opporom)
-if [ "$Color_VersionCode"]; then
-    echo "- 已配置禁用Hans参数"
-else
-    rm "$MODPATH"/post-fs-data.sh
-fi
-
 echo ""
 cat "$MODPATH"/changelog.txt
 echo ""

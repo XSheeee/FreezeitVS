@@ -1,16 +1,10 @@
-# 绂佺敤 Millet
-persist.sys.gz.enable=false
-persist.sys.millet.handshake=false
-persist.sys.powmillet.enable=false
-persist.sys.brightmillet.enable=false
-
-# 缂撹В鏉�鍚庡彴 (婧愯嚜閰峰畨 @moonheart)
+# 缓解杀后台 (源自酷安 @moonheart)
 persist.sys.mms.compact_enable=true
 persist.sys.mms.bg_apps_limit=256
 persist.sys.spc.enabled=false
 persist.sys.spc.extra_free_enable=false
 persist.sys.spc.screenoff_kill_enable=false
 
-#闃叉鏉�鍚庡彴(鏉ヨ嚜榄斿▉)
+#防止杀后台(来自魔威)
 ro.sys.fw.empty_app_percent=50
 ro.sys.fw.trim_empty_percent=100
