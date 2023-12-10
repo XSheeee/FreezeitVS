@@ -17,7 +17,7 @@ private:
             10, //[2] freezeTimeout sec
             20, //[3] wakeupTimeoutMin min
             20, //[4] terminateTimeout sec
-            5,  //[5] setMode
+            2,  //[5] setMode
             2,  //[6] refreezeTimeout
             0,  //[7]
             0,  //[8]
@@ -43,7 +43,7 @@ private:
             0,  //[28]
             0,  //[29]
             0,  //[30] Doze调试日志
-            1,  //[31]
+            0,  //[31]
             0,  //[32]
     };
 
@@ -64,7 +64,7 @@ public:
     uint8_t& enableWindows = settingsVar[18];          // 扩展前台
 
     uint8_t& enableScreenDebug = settingsVar[30];        // Doze调试日志
-    uint8_t& enableBinderFreezer = settingsVar[32];
+    uint8_t& enableBinderFreezer = settingsVar[31];
     Settings& operator=(Settings&&) = delete;
 
     Settings(Freezeit& freezeit) : freezeit(freezeit) {

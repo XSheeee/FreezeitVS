@@ -245,7 +245,8 @@ public:
             if (Utils::readString(fullPath, readBuff, sizeof(readBuff)) == 0)continue;
             const string& package = managedApp[uid].package;
             if (strncmp(readBuff, package.c_str(), package.length())) continue;
-
+            const char endChar = readBuff[package.length()]; // 特例 com.android.chrome_zygote 无法binder冻结
+            if (endChar != ':' && endChar != 0)continue;
             pids[uid].emplace_back(pid);
         }
         closedir(dir);
@@ -289,7 +290,8 @@ public:
             if (Utils::readString(fullPath, readBuff, sizeof(readBuff)) == 0)continue;
             const string& package = managedApp[uid].package;
             if (strncmp(readBuff, package.c_str(), package.length())) continue;
-
+            const char endChar = readBuff[package.length()]; // 特例 com.android.chrome_zygote 无法binder冻结
+            if (endChar != ':' && endChar != 0)continue;
             uids.insert(uid);
         }
         closedir(dir);
@@ -431,8 +433,8 @@ public:
         }
 
         default: {
-            freezeit.logFmt("不再冻结此应用：%s %s", appInfo.label.c_str(),
-                getModeText(appInfo.freezeMode).c_str());
+            /*freezeit.logFmt("不再冻结此应用：%s %s", appInfo.label.c_str(),
+                getModeText(appInfo.freezeMode).c_str());*/
             return 0;
         }
         }

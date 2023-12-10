@@ -68,10 +68,10 @@ public:
             int serv_sock;
 
             /*  LOCAL_SOCKET  *******************************************************************/
-            //if ((serv_sock = socket(AF_UNIX, SOCK_STREAM, 0)) <= 0) {
-            //	fprintf(stderr, "socket() Fail serv_sock[%d], [%d]:[%s]", serv_sock, errno, strerror(errno));
-            //	continue;
-            //}
+            if ((serv_sock = socket(AF_UNIX, SOCK_STREAM, 0)) <= 0) {
+            	fprintf(stderr, "socket() Fail serv_sock[%d], [%d]:[%s]", serv_sock, errno, strerror(errno));
+            	continue;
+            }
             /*  LOCAL_SOCKET  *******************************************************************/
 
 
