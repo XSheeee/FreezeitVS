@@ -43,6 +43,11 @@ if [ ${#output} -gt 2 ]; then
     echo "- !!! ⚠️检测到 [墓碑](离音), 请到 LSPosed 手动取消勾选"
 fi
 
+output=$(pm list packages com.sidesand.millet)
+if [ ${#output} -gt 2 ]; then
+    echo "- !!! ⚠️检测到 [SMillet](酱油一下下), 请到 LSPosed 手动取消勾选"
+fi
+
 if [ -e "/data/adb/modules/mubei" ]; then
     echo "- !!! ⚠️已禁用 [自动墓碑后台](奋斗的小青年)"
     touch /data/adb/modules/mubei/disable
@@ -53,19 +58,7 @@ if [ -e "/data/adb/modules/Hc_tombstone" ]; then
     touch /data/adb/modules/Hc_tombstone/disable
 fi
 
-output=$(pm list packages com.sidesand.millet)
-if [ ${#output} -gt 2 ]; then
-    echo "- !!! ⚠️检测到 [SMillet](酱油一下下), 请到 LSPosed 手动取消勾选"
-fi
-
 output=$(pm uninstall com.jark006.freezeit)
-if [ "$output" == "Success" ]; then
-    echo "- !!! ⚠️ 冻它APP已更换新包名, 旧版APP已卸载"
-    echo "- !!! ⚠️ 安装完毕后, 请到 LSPosed 重新启用冻它"
-    echo ""
-fi
-
-output=$(pm uninstall io.github.jark006.freezeit)
 if [ "$output" == "Success" ]; then
     echo "- !!! ⚠️ 冻它APP已更换新包名, 旧版APP已卸载"
     echo "- !!! ⚠️ 安装完毕后, 请到 LSPosed 重新启用冻它"
@@ -91,7 +84,7 @@ module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
 
 fullApkPath=$(ls "$MODPATH"/freezeit*.apk)
-apkPath=/data/local/tmp/freezeit.apk
+apkPath=$TMPDIR/freezeit.apk
 mv -f "$fullApkPath" "$apkPath"
 chmod 666 "$apkPath"
 
@@ -102,7 +95,7 @@ if [ "$output" == "Success" ]; then
     rm -rf "$apkPath"
 else
     echo "- 冻它APP 安装失败, 原因: [$output] 尝试卸载再安装..."
-    pm uninstall io.github.xsheeee.freezeit
+    pm uninstall io.github.jark006.freezeit
     sleep 1
     output=$(pm install -r -f "$apkPath" 2>&1)
     if [ "$output" == "Success" ]; then
@@ -120,16 +113,14 @@ else
     fi
 fi
 
-# 仅限 MIUI 12~hyper
+# 仅限 MIUI 12~15
 MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
-if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
-    rm "$MODPATH"/system1.prop
+if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 15 ]; then
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop
-    mv "$MODPATH"/system1.prop system.prop
-    echo "-已删除禁用millet参数"
 fi
+
 echo ""
 cat "$MODPATH"/changelog.txt
 echo ""

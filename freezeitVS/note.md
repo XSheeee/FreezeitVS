@@ -1,15 +1,6 @@
 /data/adb/magisk/magisk64 --install-module /sdcard/freezeit_v2.4.2.zip
 
 
-R5 5600X
-
-time /d/AndroidSDK/ndk/25.2.9519653/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe --target=aarch64-none-linux-android29 --sysroot=/d/AndroidSDK/ndk/25.2.9519653/toolchains/llvm/prebuilt/windows-x86_64/sysroot -std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-exceptions -fno-rtti -DNDEBUG -fPIE -Iinclude src/main.cpp -o ./ARM64/freezeit
-
-real    0m3.888s
-user    0m0.000s
-sys     0m0.015s
-
-
 模块挂载目录
 ``` sh
 $(magisk --path)/.magisk/modules
@@ -20,7 +11,6 @@ TODO 监控杀进程信号
 TODO 分析后台唤醒
 TODO popen() 错误
 TODO SIGSTOP会被解冻
-TODO ColorOS有系统界面属于第三方应用
 
 
 objdump 反汇编
@@ -114,12 +104,6 @@ netstat -apn
 
 所有任务
 cat /dev/cpuset/tasks
-
-随机生成UUID
-cat /proc/sys/kernel/random/uuid
-
-SOC ID
-cat /sys/bus/soc/devices/soc0/serial_number
 
 CPU核心 可用核心
 /sys/devices/system/cpu/present
@@ -838,10 +822,10 @@ if(clazz != null) {
   int mini = len / 60;
   int sec = len % 60;
   if (day < 180) {
-    freezeit.logFmt("内测到期时间: %s", endStr);
-    freezeit.logFmt("内测剩余时间: %d天%02d时%02d分%02d秒", day, hour, mini, sec);
+    freezeit.log("内测到期时间: %s", endStr);
+    freezeit.log("内测剩余时间: %d天%02d时%02d分%02d秒", day, hour, mini, sec);
   } else {
-    freezeit.logFmt("冻它模块 长期版");
+    freezeit.log("冻它模块 长期版");
   }
 #endif
 ```

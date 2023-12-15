@@ -6,9 +6,11 @@
  * 
  * 主线程8MiB  子线程 栈深约 1016Kib
  * 
+ * 在左下角 Build Variants 选择 Release
+ * 在任意 cpp头文件或源码文件中，菜单 Build -> Recompile "xxx"
+ * 编译输出 module\\build\intermediates\cmake\release\obj\arm64-v8a
+ * 
  */
-
-//XShe改
 
 #include "freezeit.hpp"
 #include "settings.hpp"
@@ -18,24 +20,11 @@
 #include "freezer.hpp"
 #include "server.hpp"
 
-const int TEST_CODE = 0;
-
-void test();
-
 int main(int argc, char **argv) {
-
-    if (TEST_CODE) {
-        test();
-        exit(0);
-    }
-
-    //先获取模块目录，下面Init开启守护线程后就不能获取了
-    char fullPath[1024] = {};
-    auto pathPtr = realpath(argv[0], fullPath); 
 
     Utils::Init();
 
-    Freezeit freezeit(argc, string(pathPtr));
+    Freezeit freezeit(argc, argv[0]);
     Settings settings(freezeit);
     ManagedApp managedApp(freezeit, settings);
     SystemTools systemTools(freezeit, settings);
@@ -43,14 +32,6 @@ int main(int argc, char **argv) {
     Freezer freezer(freezeit, settings, managedApp, systemTools, doze);
     Server server(freezeit, settings, managedApp, systemTools, doze, freezer);
 
-    // 424720 Bytes
-    //constexpr int size = sizeof(Freezeit) + sizeof(Settings) + sizeof(ManagedApp) + sizeof(SystemTools)
-    //    + sizeof(Doze) + sizeof(Freezer) + sizeof(Server);
-
-    sleep(3600 * 24 * 365);//放年假
+    sleep(3600 * 24 * 366);//放年假
     return 0;
-}
-
-void test() {
-    printf("Test\n");
 }

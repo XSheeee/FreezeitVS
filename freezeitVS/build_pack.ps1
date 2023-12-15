@@ -18,24 +18,19 @@ $versionCode = Get-Content magisk/module.prop | Where-Object { $_ -match "versio
 $versionCode = $versionCode.split('=')[1]
 $zipFile = "${id}_v${version}.zip"
 
-$windowsToolchainsDir = "D:/android-ndk-r26b-windows/android-ndk-r26b/toolchains/llvm/prebuilt/windows-x86_64/bin"
+$windowsToolchainsDir = "D:\AndroidStudio\AndroidSDK\ndk\26.1.10909125\toolchains\llvm\prebuilt\windows-x86_64\bin"
 $clang = "${windowsToolchainsDir}/clang++.exe"
 $target = "--target=aarch64-none-linux-android29"
-$sysroot = "--sysroot=D:/android-ndk-r26b-windows/android-ndk-r26b/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
-$cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-rtti -DNDEBUG -fPIE"
+$sysroot = "--sysroot=D:\AndroidStudio\AndroidSDK\ndk\26.1.10909125\toolchains\llvm\prebuilt\windows-x86_64\sysroot"
+$cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-exceptions -fno-rtti -DNDEBUG -fPIE"
 
 log "Compiler..."
-& $clang $target $sysroot $cppFlags.Split(' ') -Iinclude src/main.cpp -o magisk/${id}
-if (-not$?)
-{
-    log "Compiler fail"
-    exit
-}
+& $clang $target $sysroot $cppFlags.Split(' ') -I. main.cpp -o magisk/${id}
 
 Copy-Item changelog.txt magisk -force
 
 
-$releaseDir = "D:/freezeit/freezeitRelease"
+$releaseDir = "D:/Project-github/freezeitRelease"
 if ((Test-Path $releaseDir) -ne "True")
 {
     log "None Path: $releaseDir"
@@ -72,8 +67,8 @@ log "Creating... update json"
 $jsonContent = "{
     `"version`": `"$version`",
     `"versionCode`": $versionCode,
-    `"zipUrl`": `"https://ghproxy.com/https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/$zipFile`",
-    `"changelog`": `"https://ghproxy.com/https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/changelog.txt`"`n}"
+    `"zipUrl`": `"https://github.com/XSheeee/freezeitRelease/main/$zipFile`",
+    `"changelog`": `"https://github.com/XSheeee/freezeitRelease/main/changelog.txt`"`n}"
 $jsonContent > ${releaseDir}/update.json
 
 Copy-Item README.md  ${releaseDir}/README.md -force

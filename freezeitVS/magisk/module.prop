@@ -1,7 +1,6 @@
 id=freezeit
-name=冻它
-version=1.2.3
-versionCode=1002030
-author=JARK006/XShe
-description=实现部分墓碑机制，自动暂停后台应用运行
-updateJson=https://ghproxy.com/https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/update.json
+name=冻它（改版）
+version=2.1.1
+versionCode=2001010
+author=JARK006/魔威/XShe
+description=实现部分墓碑机制 自动暂停后台应用运行 在原有的基础CPU保持流畅 省电的模块

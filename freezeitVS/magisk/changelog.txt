@@ -1,4 +1,12 @@
-###v1.2.3###
-	修改一堆微小逻辑
-	照着3.0.0选择性抄了一部分
-	改了下localSocketRequests()
+v2.1.1
+	魔威:
+		融合A0保后台
+		融合freezerV1内存泄漏补丁
+		对lmkd qti进行优化
+		优化freezeit启动速度
+		在QQ冻结断网时杀死推送进程
+	XShe:
+		完善binder_freezer开关功能及逻辑
+	*:
+		基于冻他原版2.6.4开发
+		更换ndk版本

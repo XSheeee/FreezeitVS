@@ -26,38 +26,18 @@ echo "[$(date "+%Y-%m-%d %H:%M:%S")] 开始运行服务脚本" >"$bootLogPath"
 
 wait_until_login
 
-MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
-if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
-    echo "[$(date "+%Y-%m-%d %H:%M:%S")] 进入桌面, 30秒后将启动冻它" >>"$bootLogPath"
+echo "[$(date "+%Y-%m-%d %H:%M:%S")] 进入桌面, 30秒后将启动冻它" >>"$bootLogPath"
 
-    sleep 30
+sleep 30
 
-    if [ -e "$MODDIR"/disable ] || [ -e "$MODDIR"/remove ]; then
-        # shellcheck disable=SC2086
-        echo "[$(date "+%Y-%m-%d %H:%M:%S")] 冻它已被禁用或移除，取消启动" >>$bootLogPath
-        exit
-    fi
-
-    echo "[$(date "+%Y-%m-%d %H:%M:%S")] 启动冻它" >>"$bootLogPath"
-
-    # 带一个任意参数将开启文件式日志 [ /sdcard/Android/freezeit.log ]
-    # "$MODDIR"/freezeit 0
-    "$MODDIR"/freezeit
-
-else
-    echo "[$(date "+%Y-%m-%d %H:%M:%S")] 进入桌面, 30秒后将启动冻它" >>"$bootLogPath"
-
-    sleep 30
-
-    if [ -e "$MODDIR"/disable ] || [ -e "$MODDIR"/remove ]; then
-        # shellcheck disable=SC2086
-        echo "[$(date "+%Y-%m-%d %H:%M:%S")] 冻它已被禁用或移除，取消启动" >>$bootLogPath
-        exit
-    fi
-
-    echo "[$(date "+%Y-%m-%d %H:%M:%S")] 启动冻它" >>"$bootLogPath"
-
-    # 带一个任意参数将开启文件式日志 [ /sdcard/Android/freezeit.log ]
-    # "$MODDIR"/freezeit 0
-    "$MODDIR"/freezeit
+if [ -e "$MODDIR"/disable ] || [ -e "$MODDIR"/remove ]; then
+    # shellcheck disable=SC2086
+    echo "[$(date "+%Y-%m-%d %H:%M:%S")] 冻它已被禁用或移除，取消启动" >>$bootLogPath
+    exit
 fi
+
+echo "[$(date "+%Y-%m-%d %H:%M:%S")] 启动冻它" >>"$bootLogPath"
+
+# 带一个任意参数将开启文件式日志 [ /sdcard/Android/freezeit.log ]
+# "$MODDIR"/freezeit 0
+"$MODDIR"/freezeit
