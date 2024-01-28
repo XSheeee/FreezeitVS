@@ -11,6 +11,12 @@ if [ ${#output} -gt 2 ]; then
     echo "- !!! ⚠️检测到 [NoActive](myflavor), 请到 LSPosed 手动取消勾选"
 fi
 
+output=$(pm list packages cn.myflv.noactive)
+if [ ${#output} -gt 2 ]; then
+    echo "- !!! ⚠️检测到 [NoActive](myflavor), 请到 LSPosed 手动取消勾选"
+fi
+
+
 output=$(pm list packages com.github.uissd.miller)
 if [ ${#output} -gt 2 ]; then
     echo "- !!! ⚠️检测到 [Miller](UISSD), 请到 LSPosed 手动取消勾选"
@@ -119,6 +125,9 @@ echo ""
 cat "$MODPATH"/changelog.txt
 echo ""
 echo "- 安装完毕, 重启生效"
+echo "- 安卓墓碑频道:Tombstone6"
+echo "- 改版Q群:697991010"
+echo "- 改版QQ频道:newfreezeit519"
 echo "- 若出现异常日志, 请反馈给作者, 谢谢"
 echo "- [ /sdcard/Android/freezeit_crash_log.txt ]"
 echo ""
