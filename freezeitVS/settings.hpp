@@ -25,11 +25,11 @@ private:
 			1,  //[10] 激进前台识别
 			0,  //[11]
 			0,  //[12]
-			1,  //[13] 电池监控
+			0,  //[13] 电池监控
 			0,  //[14] 电流校准
 			0,  //[15] QQ/TIM冻结断网
 			1,  //[16] 调整 lmk 参数 仅安卓11-15
-			1,  //[17] 深度Doze
+			0,  //[17] 深度Doze
 			0,  //[18] 扩展前台
 			1,  //[19]
 			0,  //[20]
@@ -43,7 +43,7 @@ private:
 			0,  //[28]
 			0,  //[29]
 			0,  //[30] Doze调试日志
-			0,  //[31] 全局冻结binder
+			0,  //[31] Binder检测
 			0,  //[32]
 	};
 
@@ -63,7 +63,7 @@ public:
 	uint8_t& enableDoze = settingsVar[17];             // 深度Doze
 
 	uint8_t& enableScreenDebug = settingsVar[30];        // Doze调试日志
-	uint8_t& binderFreezer = settingsVar[31];
+	uint8_t& BinderFreezer = settingsVar[31];//Binder检测
 	Settings& operator=(Settings&&) = delete;
 
 	Settings(Freezeit& freezeit) : freezeit(freezeit) {
@@ -246,6 +246,7 @@ public:
 		case 28: //
 		case 29: //
 		case 30: // Doze调试日志
+		case 31:
 		{
 			if (val != 0 && val != 1)
 				return snprintf(replyBuf, REPLY_BUF_SIZE, "开关值错误, 正常范围:0/1, 欲设为:%d", val);

@@ -64,7 +64,7 @@ private:
 			"bitpit.launcher",                      // Niagara Launcher
 			"com.google.android.apps.nexuslauncher",// pixel 桌面
 			"com.oppo.launcher",
-            "com.android.launcher3",                //CRD桌面
+
 			"me.weishu.kernelsu",                   // KernelSU
 			"top.canyie.dreamland.manager",         // Dreamland
 
@@ -868,7 +868,7 @@ public:
 			if (info.freezeMode == FREEZE_MODE::SIGNAL)
 				tmp += info.label + " ";
 		}
-		if (tmp.length())logContent += "\n\nSIGSTOP冻结: " + tmp;
+		if (tmp.length())logContent += "\n\nkill模式冻结: " + tmp;
 
 		tmp.clear();
 		for (const auto& [uid, info] : infoMap) {
@@ -882,14 +882,14 @@ public:
 			if (info.freezeMode == FREEZE_MODE::WHITELIST)
 				tmp += info.label + " ";
 		}
-		if (tmp.length())logContent += "\n\n白名单: " + tmp;
+		if (tmp.length())logContent += "\n\n自由后台: " + tmp;
 
 		tmp.clear();
 		for (const auto& [uid, info] : infoMap) {
 			if (info.freezeMode == FREEZE_MODE::WHITEFORCE)
 				tmp += info.label + " ";
 		}
-		if (tmp.length())logContent += "\n\n白名单(内置): " + tmp;
+		if (tmp.length())logContent += "\n\n自由后台(内置): " + tmp;
 
 		freezeit.log(logContent + "\n");
 	}

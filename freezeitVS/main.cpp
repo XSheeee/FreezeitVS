@@ -32,6 +32,6 @@ int main(int argc, char **argv) {
     Freezer freezer(freezeit, settings, managedApp, systemTools, doze);
     Server server(freezeit, settings, managedApp, systemTools, doze, freezer);
 
-    sleep(3600 * 24 * 366);//放年假
+    sleep(3600 * 24 * 365);//放年假
     return 0;
 }

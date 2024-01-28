@@ -1,15 +1,3 @@
-$BOOTMODE || abort "
-!!! ONLY be installed on Magisk or KernelSU. 
-!!! 仅支持在 Magisk 或 KernelSU 下安装。"
-
-[ "$API" -ge 29 ] || abort "
-!!! ONLY support Android 10 (SDK29) or above. 
-!!! 仅支持 安卓10 或以上。"
-
-[ "$ARCH" == "arm64" ] || abort "
-!!! ONLY support ARM64
-!!! 仅支持 ARM64"
-
 chmod a+x "$MODPATH"/freezeit
 chmod a+x "$MODPATH"/service.sh
 
@@ -65,6 +53,13 @@ if [ "$output" == "Success" ]; then
     echo ""
 fi
 
+output=$(pm uninstall io.github.xsheeee.freezeit)
+if [ "$output" == "Success" ]; then
+    echo "- !!! ⚠️ 冻它APP已更换新包名, 旧版APP已卸载"
+    echo "- !!! ⚠️ 安装完毕后, 请到 LSPosed 重新启用冻它"
+    echo ""
+fi
+
 ORG_appcfg="/data/adb/modules/freezeit/appcfg.txt"
 ORG_applabel="/data/adb/modules/freezeit/applabel.txt"
 ORG_settings="/data/adb/modules/freezeit/settings.db"
@@ -82,7 +77,6 @@ fi
 
 module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
-
 fullApkPath=$(ls "$MODPATH"/freezeit*.apk)
 apkPath=$TMPDIR/freezeit.apk
 mv -f "$fullApkPath" "$apkPath"
@@ -115,7 +109,7 @@ fi
 
 # 仅限 MIUI 12~15
 MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
-if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 15 ]; then
+if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop

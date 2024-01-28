@@ -30,7 +30,7 @@ log "Compiler..."
 Copy-Item changelog.txt magisk -force
 
 
-$releaseDir = "D:/Project-github/freezeitRelease"
+$releaseDir = "D:\freezeit\freezeitRelease"
 if ((Test-Path $releaseDir) -ne "True")
 {
     log "None Path: $releaseDir"

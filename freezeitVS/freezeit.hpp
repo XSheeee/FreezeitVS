@@ -6,6 +6,7 @@
 class Freezeit {
 private:
 	const char* LOG_PATH = "/sdcard/Android/freezeit.log";
+
 	constexpr static int LINE_SIZE = 1024 * 32;   //  32 KiB
 	constexpr static int BUFF_SIZE = 1024 * 128;  // 128 KiB
 

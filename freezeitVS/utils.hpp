@@ -100,9 +100,10 @@ constexpr auto FORK_DOUBLE = 1;
 enum class WORK_MODE : uint32_t {
 	GLOBAL_SIGSTOP = 0,
 	V1F = 1,
-	V1F_ST = 2,
-	V2UID = 3,
-	V2FROZEN = 4,
+	V1UID = 2,
+	V1F_ST = 3,
+	V2UID = 4,
+	V2FROZEN = 5,
 };
 
 enum class FREEZE_MODE : uint32_t {
@@ -448,7 +449,7 @@ namespace Utils {
 			char tips[256];
 			auto len = snprintf(tips, sizeof(tips),
 				"冻它已经在运行(pid: %s), 当前进程(pid:%d)即将退出，"
-				"请勿手动启动冻它, 也不要在多个XP框架同时安装冻它模块", buf, getpid());
+				"请勿手动启动冻它, 也不要在多个框架同时安装冻它模块", buf, getpid());
 			printf("\n!!! \n!!! %s\n!!!\n\n", tips);
 			printException(nullptr, 0, tips, len);
 			exit(-2);

@@ -58,6 +58,9 @@
     <None Include="magisk\freezeit">
       <Filter>magisk</Filter>
     </None>
+    <None Include="magisk\freezeit_v2.6.4.apk">
+      <Filter>magisk</Filter>
+    </None>
     <None Include="magisk\module.prop">
       <Filter>magisk</Filter>
     </None>

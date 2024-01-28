@@ -27,7 +27,7 @@ private:
 	uint32_t unfrozenTimeline[4096] = {};
 	map<int, uint32_t> unfrozenIdx;
 
-	int refreezeSecRemain = 30; //开机 30秒就压缩进程 
+	int refreezeSecRemain = 70; //开机 一分钟时 就压一次
 	int remainTimesToRefreshTopApp = 2; //允许多线程冲突，不需要原子操作
 
 	static const size_t GET_VISIBLE_BUF_SIZE = 256 * 1024;
@@ -47,10 +47,15 @@ private:
 	const char* cpusetEventPathA12 = "/dev/cpuset/top-app/tasks";
 	const char* cpusetEventPathA13 = "/dev/cpuset/top-app/cgroup.procs";
 
-	// const char* cgroupV1UidPath = "/dev/jark_freezer/uid_%d";
-	const char* cgroupV1FrozenPath = "/dev/jark_freezer/frozen/cgroup.procs";
-	const char* cgroupV1UnfrozenPath = "/dev/jark_freezer/unfrozen/cgroup.procs";
+	// const char* cgroupV1UidPath = "/dev/jark_freezer/uid_%d"; // 这是普通的freezer V1
+	// 默认路径是/dev/jark_freezer/frozen/cgroup.procs
+	const char* cgroupV1FrozenPath = "/sys/fs/cgroup/freezer/cgroup.procs";
+	// 默认路径是/dev/jark_freezer/unfrozen/cgroup.procs
+	const char* cgroupV1UnfrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";
 
+	// 这是freezer V1+ 如果系统默认挂载上了freezer V1就使用这个 PS:MIUI使用这个能防止V1内存泄漏 仅限MIUI13 
+	const char* cgroupV1UidFrozenPath = "/sys/fs/cgroup/freezer/cgroup.procs";
+	const char* cgroupV1UidUnfrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";
 	// 如果直接使用 uid_xxx/cgroup.freeze 可能导致无法解冻
 	const char* cgroupV2UidPidPath = "/sys/fs/cgroup/uid_%d/pid_%d/cgroup.freeze"; // "1"frozen   "0"unfrozen
 	const char* cgroupV2FrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";         // write pid
@@ -71,14 +76,16 @@ public:
 
 	const string workModeStr(WORK_MODE mode) {
 		const string modeStrList[] = {
-			    "全局SIGSTOP (强力冻结)",
-			    "FreezerV1模式 (FROZEN)",
-				"FreezerV1模式 (FRZ+ST强力冻结)",
-				"FreezerV2模式 (UID)",
-				"FreezerV2模式 (FROZEN)",
-				"错误" };
+				"全局kill模式",
+				"FreezerV1 (FROZEN)",
+				"FreezerV1+(FROZEN)",
+				"FreezerV1 (FRZ+kill)",
+				"FreezerV2 (UID)",
+				"FreezerV2 (FROZEN)",
+				"Unknown" };
 		const uint32_t idx = static_cast<uint32_t>(mode);
-		return modeStrList[idx <= 5 ? idx : 5];
+		// 默认5
+		return modeStrList[idx <= 6 ? idx : 6];
 	}
 
 	Freezer(Freezeit& freezeit, Settings& settings, ManagedApp& managedApp,
@@ -104,7 +111,7 @@ public:
 		case WORK_MODE::GLOBAL_SIGSTOP: {
 			workMode = WORK_MODE::GLOBAL_SIGSTOP;
 			freezeit.setWorkMode(workModeStr(workMode));
-			freezeit.log("已设置[全局SIGSTOP], [Freezer冻结]将变为[SIGSTOP冻结]");
+			freezeit.log("已设置[全局kill], [Freezer冻结]将变为[kill冻结]");
 		}
 									  return;
 
@@ -118,15 +125,26 @@ public:
 			freezeit.log("不支持自定义Freezer类型 V1(FROZEN) 失败");
 		}
 						   break;
+		// Freezer V1+
+		case WORK_MODE::V1UID: {
+			if (mountFreezerV1UID()) {
+				workMode = WORK_MODE::V1UID;
+				freezeit.setWorkMode(workModeStr(workMode));
+				freezeit.log("Freezer类型已设为 V1+(FROZEN)");
+				return;
+			}
+			freezeit.log("不支持自定义Freezer类型 V1+(FROZEN) 失败");
+		}
+						   break;
 
 		case WORK_MODE::V1F_ST: {
 			if (mountFreezerV1()) {
 				workMode = WORK_MODE::V1F_ST;
 				freezeit.setWorkMode(workModeStr(workMode));
-				freezeit.log("Freezer类型已设为 V1(FRZ+ST)");
+				freezeit.log("Freezer类型已设为 V1(FRZ+kill)");
 				return;
 			}
-			freezeit.log("不支持自定义Freezer类型 V1(FRZ+ST)");
+			freezeit.log("不支持自定义Freezer类型 V1(FRZ+kill)");
 		}
 							  break;
 
@@ -165,15 +183,19 @@ public:
 			workMode = WORK_MODE::V1F;
 			freezeit.log("Freezer类型已设为 V1(FROZEN)");
 		}
+		else if (mountFreezerV1UID()) {
+			workMode = WORK_MODE::V1UID;
+			freezeit.log("Freezer类型已设为 V1+(FROZEN)");
+		}
 		else {
 			workMode = WORK_MODE::GLOBAL_SIGSTOP;
-			freezeit.log("不支持任何Freezer, 已开启 [全局SIGSTOP] 冻结模式");
+			freezeit.log("不支持任何Freezer, 已开启 [全局Kill] 冻结模式");
 		}
 		freezeit.setWorkMode(workModeStr(workMode));
 	}
-
+	// freezer V1冻结方式 
 	bool isV1Mode() {
-		return workMode == WORK_MODE::V1F_ST || workMode == WORK_MODE::V1F;
+		return workMode == WORK_MODE::V1F_ST || workMode == WORK_MODE::V1F || workMode == WORK_MODE::V1UID;
 	}
 
 	void getPids(appInfoStruct& info, const int uid) {
@@ -376,6 +398,18 @@ public:
 			}
 		}
 							  break;
+		// 这是freezer V1+冻结方式
+		case WORK_MODE::V1UID : {
+			for (const int pid : pids) {
+				if (!Utils::writeInt(
+					// 这里填的是你之前定义的freezer V1+的位置
+					signal == SIGSTOP ? cgroupV1UidFrozenPath : cgroupV1UidUnfrozenPath, pid))
+					freezeit.log("%s [%s] 失败(V1+F) PID:%d", (signal == SIGSTOP ? "冻结" : "解冻"),
+						managedApp[uid].label.c_str(), pid);
+			}
+		}
+							  break;
+
 
 		case WORK_MODE::V1F: {
 			for (const int pid : pids) {
@@ -394,6 +428,7 @@ public:
 			   break;
 		}
 	}
+
 
 	// 只接受 SIGSTOP SIGCONT
 	int handleProcess(appInfoStruct& info, const int uid, const int signal) {
@@ -416,32 +451,23 @@ public:
 		switch (info.freezeMode) {
 		case FREEZE_MODE::FREEZER: {
 			if (workMode != WORK_MODE::GLOBAL_SIGSTOP) {
-				if (settings.binderFreezer) {
+				if (settings.BinderFreezer) {
 					const int res = handleBinder(info.pids, signal);
 					if (res < 0 && signal == SIGSTOP && info.isTolerant)
 						return res;
 					handleFreezer(uid, info.pids, signal);
-				}else {
-					const int res = 1;
-					handleFreezer(uid, info.pids, signal);
 				}
+				else handleFreezer(uid, info.pids, signal);
 				break;
 			}
 			// 如果是全局 WORK_MODE::GLOBAL_SIGSTOP 则顺着执行下面
 		}
 
 		case FREEZE_MODE::SIGNAL: {
-			if (settings.binderFreezer) {
-				const int res = handleBinder(info.pids, signal);
-				if (res < 0 && signal == SIGSTOP && info.isTolerant)
-					return res;
-				handleSignal(uid, info.pids, signal);
-			}
-			else {
-				const int res = 1;
-				handleSignal(uid, info.pids, signal);
-			}
-			break;
+			const int res = handleBinder(info.pids, signal);
+			if (res < 0 && signal == SIGSTOP && info.isTolerant)
+				return res;
+			handleSignal(uid, info.pids, signal);
 		}
 								break;
 
@@ -484,18 +510,10 @@ public:
 				const auto ret = systemTools.breakNetworkByLocalSocket(uid);
 				switch (static_cast<REPLY>(ret)) {
 				case REPLY::SUCCESS:
-					//既然断网了 那就帮你杀死推送
-					system("kill -9 com.tencent.mobile;MSF");
-					system("kill -9 com.tencent.tim;MSF");
 					freezeit.log("断网成功: %s", info.label.c_str());
-					freezeit.log("杀死推送成功", info.label.c_str());
 					break;
 				case REPLY::FAILURE:
-					//既然断网了 那就帮你杀死推送
-					system("kill -9 com.tencent.mobile;MSF");
-					system("kill -9 com.tencent.tim;MSF");
 					freezeit.log("断网失败: %s", info.label.c_str());
-					freezeit.log("杀死推送成功", info.label.c_str());
 					break;
 				default:
 					freezeit.log("断网 未知回应[%d] %s", ret, info.label.c_str());
@@ -599,7 +617,7 @@ public:
 				(info.package == "com.tencent.mobileqq" || info.package == "com.tencent.tim"))
 				uidOfQQTIM.emplace_back(uid);
 		}
-		if (tmp.length()) freezeit.log("定时SIGSTOP压制: %s", tmp.c_str());
+		if (tmp.length()) freezeit.log("定时kill压制: %s", tmp.c_str());
 
 		tmp.clear();
 		for (const auto& [uid, pids] : terminateList) {
@@ -613,14 +631,14 @@ public:
 			usleep(1000 * 100);
 			systemTools.breakNetworkByLocalSocket(uid);
 			freezeit.log("定时压制 断网 [%s]", managedApp[uid].label.c_str());
-			freezeit.log("杀死推送成功", managedApp[uid].label.c_str());
 		}
 
 		END_TIME_COUNT;
 	}
 
 	bool mountFreezerV1() {
-		if (!access("/dev/jark_freezer", F_OK)) // 已挂载
+		// 默认路径 /dev/jark_freezer/
+		if (!access("/sys/fs/cgroup/freezer", F_OK)) // 已挂载
 			return true;
 
 		// https://man7.org/linux/man-pages/man7/cgroups.7.html
@@ -701,7 +719,10 @@ infoEncrypt()
 		system((const char*)cmd);
 		return (!access(cgroupV1FrozenPath, F_OK) && !access(cgroupV1UnfrozenPath, F_OK));
 	}
-
+	bool mountFreezerV1UID() {
+		// 校验FreezerV1+是否挂载
+		return (!access(cgroupV1UidFrozenPath, F_OK) && !access(cgroupV1UidUnfrozenPath, F_OK));
+	}
 	bool checkFreezerV2UID() {
 		return (!access(cgroupV2FreezerCheckPath, F_OK));
 	}
@@ -831,7 +852,7 @@ infoEncrypt()
 				STRNCAT(procStateStr, len, "❄️V1冻结中 %s\n", label.c_str());
 			}
 			else if (!strcmp(readBuff, SIGSTOPwchan)) {
-				STRNCAT(procStateStr, len, "🧊ST冻结中 %s\n", label.c_str());
+				STRNCAT(procStateStr, len, "🧊kill冻结中 %s\n", label.c_str());
 			}
 			else if (!strcmp(readBuff, v2xwchan)) {
 				STRNCAT(procStateStr, len, "❄️V2*冻结中 %s\n", label.c_str());
@@ -922,18 +943,15 @@ infoEncrypt()
 			const int uid = it->first;
 			auto& info = managedApp[uid];
 			const int num = handleProcess(info, uid, SIGSTOP);
-			if (settings.binderFreezer)
-			{
-				if (num < 0) {
-					remainSec = static_cast<int>(settings.freezeTimeout) << (++info.failFreezeCnt);
-					if (remainSec < 60)
-						freezeit.log("%s:%d Binder正在传输, 延迟冻结 %d秒", info.label.c_str(), -num, remainSec);
-					else
-						freezeit.log("%s:%d Binder正在传输, 延迟冻结 %d分%d秒", info.label.c_str(), -num,
-							remainSec / 60, remainSec % 60);
-					it++;
-					continue;
-				}
+			if (num < 0) {
+				remainSec = static_cast<int>(settings.freezeTimeout) << (++info.failFreezeCnt);
+				if (remainSec < 60)
+					freezeit.log("%s:%d Binder正在传输, 延迟冻结 %d秒", info.label.c_str(), -num, remainSec);
+				else
+					freezeit.log("%s:%d Binder正在传输, 延迟冻结 %d分%d秒", info.label.c_str(), -num,
+						remainSec / 60, remainSec % 60);
+				it++;
+				continue;
 			}
 			it = pendingHandleList.erase(it);
 			info.failFreezeCnt = 0;
@@ -1212,15 +1230,15 @@ infoEncrypt()
 	string getModeText(FREEZE_MODE mode) {
 		switch (mode) {
 		case FREEZE_MODE::TERMINATE:
-            return "杀死后台";
+			return "杀死后台";
 		case FREEZE_MODE::SIGNAL:
-			return "SIGSTOP冻结";
+			return "kill模式冻结";
 		case FREEZE_MODE::FREEZER:
 			return "Freezer冻结";
 		case FREEZE_MODE::WHITELIST:
-			return "白名单";
+			return "自由后台";
 		case FREEZE_MODE::WHITEFORCE:
-			return "白名单(内置)";
+			return "自由后台(内置)";
 		default:
 			return "未知";
 		}
@@ -1430,7 +1448,7 @@ infoEncrypt()
 
 	int binder_open(const char* driver) {
 		struct binder_version b_ver { -1 };
-		if (!settings.binderFreezer) return -1;
+
 		bs.fd = open(driver, O_RDWR | O_CLOEXEC);
 		if (bs.fd < 0) {
 			freezeit.log("Binder初始化失败 [%s] [%d:%s]", driver, errno, strerror(errno));

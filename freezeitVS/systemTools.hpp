@@ -89,7 +89,6 @@ public:
 		}
 		if (__system_property_get("ro.product.marketname", res) > 0) freezeit.log("设备型号 %s", res);
 		if (__system_property_get("persist.sys.device_name", res) > 0) freezeit.log("设备名称 %s", res);
-		if (__system_property_get("ro.build.version.release", res) > 0) freezeit.log("安卓版本 %s", res);
 		if (__system_property_get("ro.system.build.version.incremental", res) > 0)
 			freezeit.log("系统版本 %s", res);
 		if (__system_property_get("ro.soc.manufacturer", res) > 0 &&
@@ -154,26 +153,14 @@ public:
 		//  8192:0,12288:100,16384:200,32768:250,65536:900,96000:950
 		//  4096:0,5120:100,8192:200,32768:250,65536:900,96000:950
 		const char* lmkdParameter[] = {
-			//A0超强保后台
-				"ro.lmk.debug", "flase",
 				"ro.lmk.low", "1001",
 				"ro.lmk.medium", "1001",
-				"ro.lmk.critical", "1001",
-				"ro.lmk.use_minfree_levels", "false",
+				"ro.lmk.critical", "100",
+				"ro.lmk.use_minfree_levels", "true",
 				"ro.lmk.use_new_strategy", "true",
 				"ro.lmk.swap_free_low_percentage", "10",
 				"sys.lmk.minfree_levels",
 				"8192:0,12288:100,16384:200,32768:250,55296:900,80640:950",
-				"ro.lmk.kill_heaviest_task", "flase",
-				"ro.config.low_ram", "flase",
-				//安卓虚进程调整
-				"ro.sys.fw.bg_apps_limit", "9999",
-				"ro.sys.fw.bservice_enable", "true",
-			    "ro.sys.fw.bservice_age", "2147483647",
-				"ro.sys.fw.bservice_limit", "2147483647",
-				//高通内存管理调整
-				"ro.vendor.qti.sys.fw.bservice_age", "2147483647",
-				"ro.vendor.qti.sys.fw.bservice_limit",  "2147483647",
 		};
 		// const char* adj = "0,100,200,250,900,950"; //另有 0,1,2,4,9,12
 		const char minfree[] = "8192,12288,16384,32768,55296,80640";
