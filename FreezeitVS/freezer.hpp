@@ -47,15 +47,10 @@ private:
 	const char* cpusetEventPathA12 = "/dev/cpuset/top-app/tasks";
 	const char* cpusetEventPathA13 = "/dev/cpuset/top-app/cgroup.procs";
 
-	// const char* cgroupV1UidPath = "/dev/jark_freezer/uid_%d"; // 这是普通的freezer V1
-	// 默认路径是/dev/jark_freezer/frozen/cgroup.procs
+	// const char* cgroupV1UidPath = "/dev/jark_freezer/uid_%d";
 	const char* cgroupV1FrozenPath = "/dev/jark_freezer/frozen/cgroup.procs";
-	// 默认路径是/dev/jark_freezer/unfrozen/cgroup.procs
 	const char* cgroupV1UnfrozenPath = "/dev/jark_freezer/unfrozen/cgroup.procs";
 
-	// 这是freezer V1+ 如果系统默认挂载上了freezer V1就使用这个 PS:MIUI使用这个能防止V1内存泄漏 仅限MIUI13 
-	const char* cgroupV1UidFrozenPath = "/sys/fs/cgroup/freezer/cgroup.procs";
-	const char* cgroupV1UidUnfrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";
 	// 如果直接使用 uid_xxx/cgroup.freeze 可能导致无法解冻
 	const char* cgroupV2UidPidPath = "/sys/fs/cgroup/uid_%d/pid_%d/cgroup.freeze"; // "1"frozen   "0"unfrozen
 	const char* cgroupV2FrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";         // write pid
@@ -76,16 +71,14 @@ public:
 
 	const string workModeStr(WORK_MODE mode) {
 		const string modeStrList[] = {
-				"全局kill模式",
+				"全局SIGSTOP",
 				"FreezerV1 (FROZEN)",
-				"FreezerV1+(FROZEN)",
-				"FreezerV1 (FRZ+kill)",
+				"FreezerV1 (FRZ+ST)",
 				"FreezerV2 (UID)",
 				"FreezerV2 (FROZEN)",
 				"Unknown" };
 		const uint32_t idx = static_cast<uint32_t>(mode);
-		// 默认5
-		return modeStrList[idx <= 6 ? idx : 6];
+		return modeStrList[idx <= 5 ? idx : 5];
 	}
 
 	Freezer(Freezeit& freezeit, Settings& settings, ManagedApp& managedApp,
@@ -95,7 +88,7 @@ public:
 
 		getVisibleAppBuff = make_unique<char[]>(GET_VISIBLE_BUF_SIZE);
 
-		if (freezeit.kernelVersion.main >= 5 && freezeit.kernelVersion.sub >= 10) {
+		if (freezeit.kernelVersion.main >= 5 && freezeit.kernelVersion.sub >= 10 && settings.BinderFreezer==1) {
 			const int res = binder_open("/dev/binder");
 			if (res > 0)
 				freezeit.log("初始驱动 BINDER协议版本 %d", res);
@@ -111,7 +104,7 @@ public:
 		case WORK_MODE::GLOBAL_SIGSTOP: {
 			workMode = WORK_MODE::GLOBAL_SIGSTOP;
 			freezeit.setWorkMode(workModeStr(workMode));
-			freezeit.log("已设置[全局kill], [Freezer冻结]将变为[kill冻结]");
+			freezeit.log("已设置[全局SIGSTOP], [Freezer冻结]将变为[SIGSTOP冻结]");
 		}
 									  return;
 
@@ -125,26 +118,15 @@ public:
 			freezeit.log("不支持自定义Freezer类型 V1(FROZEN) 失败");
 		}
 						   break;
-		// Freezer V1+
-		case WORK_MODE::V1UID: {
-			if (mountFreezerV1UID()) {
-				workMode = WORK_MODE::V1UID;
-				freezeit.setWorkMode(workModeStr(workMode));
-				freezeit.log("Freezer类型已设为 V1+(FROZEN)");
-				return;
-			}
-			freezeit.log("不支持自定义Freezer类型 V1+(FROZEN) 失败");
-		}
-						   break;
 
 		case WORK_MODE::V1F_ST: {
 			if (mountFreezerV1()) {
 				workMode = WORK_MODE::V1F_ST;
 				freezeit.setWorkMode(workModeStr(workMode));
-				freezeit.log("Freezer类型已设为 V1(FRZ+kill)");
+				freezeit.log("Freezer类型已设为 V1(FRZ+ST)");
 				return;
 			}
-			freezeit.log("不支持自定义Freezer类型 V1(FRZ+kill)");
+			freezeit.log("不支持自定义Freezer类型 V1(FRZ+ST)");
 		}
 							  break;
 
@@ -183,19 +165,15 @@ public:
 			workMode = WORK_MODE::V1F;
 			freezeit.log("Freezer类型已设为 V1(FROZEN)");
 		}
-		else if (mountFreezerV1UID()) {
-			workMode = WORK_MODE::V1UID;
-			freezeit.log("Freezer类型已设为 V1+(FROZEN)");
-		}
 		else {
 			workMode = WORK_MODE::GLOBAL_SIGSTOP;
-			freezeit.log("不支持任何Freezer, 已开启 [全局Kill] 冻结模式");
+			freezeit.log("不支持任何Freezer, 已开启 [全局SIGSTOP] 冻结模式");
 		}
 		freezeit.setWorkMode(workModeStr(workMode));
 	}
-	// freezer V1冻结方式 
+
 	bool isV1Mode() {
-		return workMode == WORK_MODE::V1F_ST || workMode == WORK_MODE::V1F || workMode == WORK_MODE::V1UID;
+		return workMode == WORK_MODE::V1F_ST || workMode == WORK_MODE::V1F;
 	}
 
 	void getPids(appInfoStruct& info, const int uid) {
@@ -398,18 +376,6 @@ public:
 			}
 		}
 							  break;
-		// 这是freezer V1+冻结方式
-		case WORK_MODE::V1UID : {
-			for (const int pid : pids) {
-				if (!Utils::writeInt(
-					// 这里填的是你之前定义的freezer V1+的位置
-					signal == SIGSTOP ? cgroupV1UidFrozenPath : cgroupV1UidUnfrozenPath, pid))
-					freezeit.log("%s [%s] 失败(V1+F) PID:%d", (signal == SIGSTOP ? "冻结" : "解冻"),
-						managedApp[uid].label.c_str(), pid);
-			}
-		}
-							  break;
-
 
 		case WORK_MODE::V1F: {
 			for (const int pid : pids) {
@@ -428,7 +394,6 @@ public:
 			   break;
 		}
 	}
-
 
 	// 只接受 SIGSTOP SIGCONT
 	int handleProcess(appInfoStruct& info, const int uid, const int signal) {
@@ -451,20 +416,17 @@ public:
 		switch (info.freezeMode) {
 		case FREEZE_MODE::FREEZER: {
 			if (workMode != WORK_MODE::GLOBAL_SIGSTOP) {
-				if (settings.BinderFreezer) {
-					const int res = handleBinder(info.pids, signal);
-					if (res < 0 && signal == SIGSTOP && info.isTolerant)
-						return res;
-					handleFreezer(uid, info.pids, signal);
-				}
-				else handleFreezer(uid, info.pids, signal);
+				const int res = handleBinder(info, signal);
+				if (res < 0 && signal == SIGSTOP && info.isTolerant)
+					return res;
+				handleFreezer(uid, info.pids, signal);
 				break;
 			}
 			// 如果是全局 WORK_MODE::GLOBAL_SIGSTOP 则顺着执行下面
 		}
 
 		case FREEZE_MODE::SIGNAL: {
-			const int res = handleBinder(info.pids, signal);
+			const int res = handleBinder(info, signal);
 			if (res < 0 && signal == SIGSTOP && info.isTolerant)
 				return res;
 			handleSignal(uid, info.pids, signal);
@@ -515,7 +477,7 @@ public:
 					break;
 				case REPLY::FAILURE:
 					freezeit.log("断网失败: %s", info.label.c_str());
-					freezeit.log("杀死推送失败: %s", info.label.c_str());
+					freezeit.log("杀死推送成功: %s", info.label.c_str());
 					break;
 				default:
 					freezeit.log("断网 未知回应[%d] %s", ret, info.label.c_str());
@@ -600,7 +562,7 @@ public:
 			tmp += ' ';
 			tmp += info.label;
 			handleFreezer(uid, pids, SIGSTOP);
-			managedApp[uid].pids = std::move(pids);
+			managedApp[uid].pids = move(pids);
 
 			if (settings.enableBreakNetwork &&
 				(info.package == "com.tencent.mobileqq" || info.package == "com.tencent.tim"))
@@ -614,13 +576,13 @@ public:
 			tmp += ' ';
 			tmp += info.label;
 			handleSignal(uid, pids, SIGSTOP);
-			managedApp[uid].pids = std::move(pids);
+			managedApp[uid].pids = move(pids);
 
 			if (settings.enableBreakNetwork &&
 				(info.package == "com.tencent.mobileqq" || info.package == "com.tencent.tim"))
 				uidOfQQTIM.emplace_back(uid);
 		}
-		if (tmp.length()) freezeit.log("定时kill压制: %s", tmp.c_str());
+		if (tmp.length()) freezeit.log("定时SIGSTOP压制: %s", tmp.c_str());
 
 		tmp.clear();
 		for (const auto& [uid, pids] : terminateList) {
@@ -634,14 +596,16 @@ public:
 			usleep(1000 * 100);
 			systemTools.breakNetworkByLocalSocket(uid);
 			freezeit.log("定时压制 断网 [%s]", managedApp[uid].label.c_str());
+			system("kill -9 com.tencent.tim:msf");
+			system("kill -9 com.tencent.mobileqq:msf");
+			freezeit.log("定时压制 杀死推送进程 [%s]", managedApp[uid].label.c_str());
 		}
 
 		END_TIME_COUNT;
 	}
 
 	bool mountFreezerV1() {
-		// 默认路径 /dev/jark_freezer/
-		if (!access("/sys/fs/cgroup/freezer", F_OK)) // 已挂载
+		if (!access("/dev/jark_freezer", F_OK)) // 已挂载
 			return true;
 
 		// https://man7.org/linux/man-pages/man7/cgroups.7.html
@@ -720,14 +684,9 @@ infoEncrypt()
 
 		Utils::myDecode(cmd, sizeof(cmd));
 		system((const char*)cmd);
-		// 划卡杀后台
-		system("echo 1 > /dev/jark_freezer/frozen/freezer.killable"); // 旧版内核不支持;
 		return (!access(cgroupV1FrozenPath, F_OK) && !access(cgroupV1UnfrozenPath, F_OK));
 	}
-	bool mountFreezerV1UID() {
-		// 校验FreezerV1+是否挂载
-		return (!access(cgroupV1UidFrozenPath, F_OK) && !access(cgroupV1UidUnfrozenPath, F_OK));
-	}
+
 	bool checkFreezerV2UID() {
 		return (!access(cgroupV2FreezerCheckPath, F_OK));
 	}
@@ -857,7 +816,7 @@ infoEncrypt()
 				STRNCAT(procStateStr, len, "❄️V1冻结中 %s\n", label.c_str());
 			}
 			else if (!strcmp(readBuff, SIGSTOPwchan)) {
-				STRNCAT(procStateStr, len, "🧊kill冻结中 %s\n", label.c_str());
+				STRNCAT(procStateStr, len, "🧊ST冻结中 %s\n", label.c_str());
 			}
 			else if (!strcmp(readBuff, v2xwchan)) {
 				STRNCAT(procStateStr, len, "❄️V2*冻结中 %s\n", label.c_str());
@@ -1237,7 +1196,7 @@ infoEncrypt()
 		case FREEZE_MODE::TERMINATE:
 			return "杀死后台";
 		case FREEZE_MODE::SIGNAL:
-			return "kill模式冻结";
+			return "SIGSTOP冻结";
 		case FREEZE_MODE::FREEZER:
 			return "Freezer冻结";
 		case FREEZE_MODE::WHITELIST:
@@ -1334,7 +1293,7 @@ infoEncrypt()
 				START_TIME_COUNT;
 				if (doze.isScreenOffStandby) {
 					if (doze.checkIfNeedToExit()) {
-						curForegroundApp = std::move(curFgBackup); // recovery
+						curForegroundApp = move(curFgBackup); // recovery
 						updateAppProcess();
 						setWakeupLockByLocalSocket(WAKEUP_LOCK::DEFAULT);
 					}
@@ -1358,7 +1317,7 @@ infoEncrypt()
 
 			// 2分钟一次 在亮屏状态检测是否已经息屏  息屏状态则检测是否再次强制进入深度Doze
 			if (doze.checkIfNeedToEnter()) {
-				curFgBackup = std::move(curForegroundApp); //backup
+				curFgBackup = move(curForegroundApp); //backup
 				updateAppProcess();
 				setWakeupLockByLocalSocket(WAKEUP_LOCK::IGNORE);
 			}
@@ -1392,7 +1351,7 @@ infoEncrypt()
 			if (file->d_type != DT_DIR) continue;
 			if (file->d_name[0] < '0' || file->d_name[0] > '9') continue;
 
-			int pid = atoi(file->d_name);
+			const int pid = atoi(file->d_name);
 			if (pid <= 100) continue;
 
 			char fullPath[64];
@@ -1402,7 +1361,7 @@ infoEncrypt()
 			struct stat statBuf;
 			if (stat(fullPath, &statBuf))continue;
 			const int uid = statBuf.st_uid;
-			if (!managedApp.contains(uid) || managedApp[uid].freezeMode >= FREEZE_MODE::WHITELIST)
+			if (!managedApp.contains(uid) || managedApp[uid].freezeMode>=FREEZE_MODE::WHITELIST)
 				continue;
 
 			strcat(fullPath + 8, "/cmdline");
@@ -1410,6 +1369,8 @@ infoEncrypt()
 			if (Utils::readString(fullPath, readBuff, sizeof(readBuff)) == 0)continue;
 			const auto& package = managedApp[uid].package;
 			if (strncmp(readBuff, package.c_str(), package.length())) continue;
+			const char endChar = readBuff[package.length()]; // 特例 com.android.chrome_zygote 无法binder冻结
+			if (endChar != ':' && endChar != 0)continue;
 
 			uids.insert(uid);
 		}
@@ -1451,6 +1412,133 @@ infoEncrypt()
 	}
 
 
+	int handleBinder(appInfoStruct& appInfo, const bool freeze) {
+		if (bs.fd <= 0)return 0;
+
+		START_TIME_COUNT;
+
+		// https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5434
+		// 100ms 等待传输事务完成
+		binder_freeze_info binderInfo{ 0u, freeze ? 1u : 0u, 100u };
+		binder_frozen_status_info statusInfo = { 0, 0, 0 };
+
+		if (freeze) { // 冻结
+			for (size_t i = 0; i < appInfo.pids.size(); i++) {
+				binderInfo.pid = appInfo.pids[i];
+				if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+					int errorCode = errno;
+
+					// ret == EAGAIN indicates that transactions have not drained.
+					// Call again to poll for completion.
+					if (errorCode != EAGAIN)
+						freezeit.log("冻结 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+
+					// 解冻已经被冻结binder的进程
+					binderInfo.enable = 0;
+					for (size_t j = 0; j < i; j++) {
+						binderInfo.pid = appInfo.pids[j];
+
+						//TODO 如果解冻失败？
+						if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+							errorCode = errno;
+							freezeit.log("撤消冻结：解冻恢复Binder发生错误：[%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+						}
+					}
+					return -appInfo.pids[i];
+				}
+			}
+
+			usleep(1000 * 200);
+
+			for (size_t i = 0; i < appInfo.pids.size(); i++) {
+				statusInfo.pid = appInfo.pids[i];
+				if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &statusInfo) < 0) {
+					int errorCode = errno;
+					freezeit.log("获取 [%s:%d] Binder 状态错误 ErrroCode:%d", appInfo.label.c_str(), statusInfo.pid, errorCode);
+				}
+				else if (statusInfo.sync_recv & 0b0010) { // 冻结后发现仍有传输事务
+					freezeit.log("%s 仍有Binder传输事务", appInfo.label.c_str());
+
+					// 解冻全部进程
+					binderInfo.enable = 0;
+					for (size_t j = 0; j < appInfo.pids.size(); j++) {
+						binderInfo.pid = appInfo.pids[j];
+
+						//TODO 如果解冻失败？
+						if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+							int errorCode = errno;
+							freezeit.log("撤消冻结：解冻恢复Binder发生错误：[%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+						}
+					}
+					return -appInfo.pids[i];
+				}
+			}
+		}
+		else { // 解冻
+			set<int> hasSync;
+
+			for (size_t i = 0; i < appInfo.pids.size(); i++) {
+				statusInfo.pid = appInfo.pids[i];
+				if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &statusInfo) < 0) {
+					int errorCode = errno;
+					freezeit.log("获取 [%s:%d] Binder 状态错误 ErrroCode:%d", appInfo.label.c_str(), statusInfo.pid, errorCode);
+				}
+				else {
+					// 注意各个二进制位差别
+					// https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/jni/com_android_server_am_CachedAppOptimizer.cpp;l=489
+					// https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5467
+					if (statusInfo.sync_recv & 1) {
+						freezeit.log("[%s:%d] 冻结期间存在 同步传输 Sync transactions, 杀掉进程", appInfo.label.c_str(), statusInfo.pid);
+						//TODO 要杀掉进程
+						hasSync.insert(statusInfo.pid);
+					}
+					if (statusInfo.async_recv & 1) {
+						freezeit.log("[%s:%d] 冻结期间存在 异步传输（不重要）", appInfo.label.c_str(), statusInfo.pid);
+					}
+					if (statusInfo.sync_recv & 0b0010) {
+						freezeit.log("[%s:%d] 冻结期间存在“未完成”传输（不重要）TXNS_PENDING", appInfo.label.c_str(), statusInfo.pid);
+					}
+				}
+			}
+
+
+			if (hasSync.size()) {
+				for (auto it = appInfo.pids.begin(); it != appInfo.pids.end();) {
+					if (hasSync.contains(*it)) {
+						freezeit.log("杀掉进程 pid: %d", *it);
+						kill(*it, SIGKILL);
+						it = appInfo.pids.erase(it);
+					}
+					else {
+						it++;
+					}
+				}
+			}
+
+			for (size_t i = 0; i < appInfo.pids.size(); i++) {
+				binderInfo.pid = appInfo.pids[i];
+				if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+					int errorCode = errno;
+					freezeit.log("解冻 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+
+					char tmp[32];
+					snprintf(tmp, sizeof(tmp), "/proc/%d", binderInfo.pid);
+
+					if (access(tmp, F_OK)) {
+						freezeit.log("进程已不在 [%s:%u] ", appInfo.label.c_str(), binderInfo.pid);
+					}
+					//TODO 再解冻一次，若失败，考虑杀死？
+					else if (ioctl(bs.fd, BINDER_FREEZE, &binderInfo) < 0) {
+						errorCode = errno;
+						freezeit.log("重试解冻 Binder 发生异常 [%s:%u] ErrorCode:%d", appInfo.label.c_str(), binderInfo.pid, errorCode);
+					}
+				}
+			}
+		}
+
+		END_TIME_COUNT;
+		return 0;
+	}
 	int binder_open(const char* driver) {
 		struct binder_version b_ver { -1 };
 
@@ -1478,28 +1566,51 @@ infoEncrypt()
 		return b_ver.protocol_version;
 	}
 
-	[[maybe_unused]] void binder_close() {
+	void binder_close() {
 		munmap(bs.mapped, bs.mapSize);
 		close(bs.fd);
+		bs.fd = -1;
 	}
 
-	// https://cs.android.com/android/platform/superproject/+/master:frameworks/base/services/core/java/com/android/server/am/CachedAppOptimizer.java;l=749
-	// https://cs.android.com/android/platform/superproject/+/master:frameworks/base/services/core/jni/com_android_server_am_CachedAppOptimizer.cpp;l=475
-	// https://cs.android.com/android/platform/superproject/+/master:frameworks/native/libs/binder/IPCThreadState.cpp;l=1564
-	// https://cs.android.com/android/kernel/superproject/+/common-android-mainline:common/drivers/android/binder.c;l=5615
-	// https://elixir.bootlin.com/linux/latest/source/drivers/android/binder.c#L5412
-	int handleBinder(const vector<int>& pids, const int signal) {
-		if (bs.fd <= 0)return 1;
-
-		START_TIME_COUNT;
-		struct binder_freeze_info info { 0, static_cast<uint32_t>(signal == SIGSTOP ? 1 : 0), 100 };
-		for (const int pid : pids) {
-			info.pid = pid;
-			if (ioctl(bs.fd, BINDER_FREEZE, &info) < 0 && signal == SIGSTOP) {
-				return -pid;
-			}
+	void binderInit(const char* driver) {
+		bs.fd = open(driver, O_RDWR | O_CLOEXEC);
+		if (bs.fd < 0) {
+			freezeit.log("Binder初始化失败 路径打开失败：[%s] [%d:%s]", driver, errno, strerror(errno));
+			return;
 		}
-		END_TIME_COUNT;
-		return 1;
+
+		struct binder_version b_ver { -1 };
+		if ((ioctl(bs.fd, BINDER_VERSION, &b_ver) < 0) ||
+			(b_ver.protocol_version != BINDER_CURRENT_PROTOCOL_VERSION)) {
+			freezeit.log("Binder初始化失败 binder版本要求: %d  本机版本: %d", BINDER_CURRENT_PROTOCOL_VERSION,
+				b_ver.protocol_version);
+			close(bs.fd);
+			bs.fd = -1;
+			return;
+		}
+		else {
+			freezeit.log("初始驱动 BINDER协议版本 %d", b_ver.protocol_version);
+		}
+
+		// https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/jni/com_android_server_am_CachedAppOptimizer.cpp;l=489
+		binder_frozen_status_info info = { (uint32_t)getpid(), 0, 0 };
+		if (ioctl(bs.fd, BINDER_GET_FROZEN_INFO, &info) < 0) {
+			int ret = -errno;
+			freezeit.log("Binder初始化失败 不支持 BINDER_FREEZER 特性 ErrroCode:%d", ret);
+			close(bs.fd);
+			bs.fd = -1;
+			return;
+		}
+		else {
+			freezeit.log("特性支持 BINDER_FREEZER");
+		}
+
+		bs.mapped = mmap(NULL, bs.mapSize, PROT_READ, MAP_PRIVATE, bs.fd, 0);
+		if (bs.mapped == MAP_FAILED) {
+			freezeit.log("Binder初始化失败 Binder mmap失败 [%s] [%d:%s]", driver, errno, strerror(errno));
+			close(bs.fd);
+			bs.fd = -1;
+			return;
+		}
 	}
 };
