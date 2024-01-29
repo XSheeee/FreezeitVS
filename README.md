@@ -2,7 +2,7 @@
 
 **[面具模块]** 实现部分墓碑机制，自动暂停后台进程的运行。
 
-**[关于改版]** 改版作者XShe
+**[关于改版]** 改版作者XShe/MoWei
 
 **[MagiskModule]** Implement a partial tombstone mechanism to automatically suspend background processes.
 
@@ -13,6 +13,8 @@
 [酷安 @JARK006](https://www.coolapk.com/u/1212220)
 
 [酷安 @XShee](https://www.coolapk.com/u/20552855) 
+
+[酷安 @魔威/MoWei](https://www.coolapk.com/u/24268987) 
 
 [QQ群组 781222669(原版)](https://jq.qq.com/?_wv=1027&k=Q5aVUglt)
 
