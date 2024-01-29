@@ -124,10 +124,11 @@ fi
 echo ""
 cat "$MODPATH"/changelog.txt
 echo ""
+echo ""
 echo "- 安装完毕, 重启生效"
 echo "- 安卓墓碑频道:Tombstone6"
 echo "- 改版Q群:697991010"
-echo "- 改版QQ频道:newfreezeit519"
+echo "- 改版QQ频道:r6197e72b1"
 echo "- 若出现异常日志, 请反馈给作者, 谢谢"
 echo "- [ /sdcard/Android/freezeit_crash_log.txt ]"
 echo ""

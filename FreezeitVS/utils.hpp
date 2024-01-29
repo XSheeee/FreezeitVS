@@ -109,9 +109,9 @@ enum class WORK_MODE : uint32_t {
 enum class FREEZE_MODE : uint32_t {
 	TERMINATE = 10,
 	SIGNAL = 20,
-	SIGNAL_BREAK = 21,
+	//SIGNAL_BREAK = 21,
 	FREEZER = 30,
-	FREEZER_BREAK = 31,
+	//FREEZER_BREAK = 31,
 	WHITELIST = 40,
 	WHITEFORCE = 50,
 };

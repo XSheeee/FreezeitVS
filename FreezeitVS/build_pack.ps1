@@ -45,23 +45,23 @@ if (-not$?)
     exit
 }
 
-# https://github.com/jark006/freezeitRelease/raw/main/$zipFile
-# https://github.com/jark006/freezeitRelease/raw/main/changelog.txt
+# https://github.com/jark006/freezeitRelease/raw/blob/main/$zipFile
+# https://github.com/jark006/freezeitRelease/raw/blob/main/changelog.txt
 
-# https://raw.githubusercontent.com/jark006/freezeitRelease/main/$zipFile
-# https://raw.githubusercontent.com/jark006/freezeitRelease/main/changelog.txt
-# https://raw.githubusercontent.com/jark006/freezeitRelease/main/freezeit_v2.2.17.zip
+# https://raw.githubusercontent.com/jark006/freezeitRelease/blob/main/$zipFile
+# https://raw.githubusercontent.com/jark006/freezeitRelease/blob/main/changelog.txt
+# https://raw.githubusercontent.com/jark006/freezeitRelease/blob/main/freezeit_v2.2.17.zip
 
-# https://raw.fastgit.org/jark006/freezeitRelease/main/$zipFile
-# https://raw.fastgit.org/jark006/freezeitRelease/main/changelog.txt
+# https://raw.fastgit.org/jark006/freezeitRelease/blob/main/$zipFile
+# https://raw.fastgit.org/jark006/freezeitRelease/blob/main/changelog.txt
 
 # https://cdn.jsdelivr.net/gh/jark006/freezeitRelease/$zipFile
 # https://cdn.jsdelivr.net/gh/jark006/freezeitRelease/changelog.txt
 
 # https://gitee.com/jark006/freezeit-release/releases/download/${version}/$zipFile
 
-# https://ghproxy.com/https://raw.githubusercontent.com/jark006/freezeitRelease/main/$zipFile
-# https://ghproxy.com/https://raw.githubusercontent.com/jark006/freezeitRelease/main/changelog.txt
+# https://ghproxy.com/https://raw.githubusercontent.com/jark006/freezeitRelease/blob/main/$zipFile
+# https://ghproxy.com/https://raw.githubusercontent.com/jark006/freezeitRelease/blob/main/changelog.txt
 
 log "Creating... update json"
 $jsonContent = "{

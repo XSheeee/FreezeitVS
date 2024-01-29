@@ -1,7 +1,7 @@
 id=freezeit
 name=冻它（改版）
-version=1-zeta
-versionCode=4012920
+version=eta-1
+versionCode=1706537551
 author=JARK006/XShe/魔威
 description=实现部分墓碑机制 自动暂停后台应用运行 在原有的基础使CPU保持流畅 省电的模块
 updateJson=https://ghproxy.com/https://raw.githubusercontent.com/XSheeee/freezeitRelease/blob/main/update.json

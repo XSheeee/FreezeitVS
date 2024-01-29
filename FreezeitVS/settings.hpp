@@ -202,8 +202,8 @@ public:
 			  break;
 
 		case 3: {  // wakeupTimeoutMin min
-			if (val < 3 || 120 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "定时解冻参数错误, 正常范围:3~120, 欲设为:%d", val);
+			if (val < 0 || 120 < val)
+				return snprintf(replyBuf, REPLY_BUF_SIZE, "定时解冻参数错误, 正常范围:0~120, 欲设为:%d", val);
 		}
 			  break;
 
