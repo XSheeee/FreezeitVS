@@ -49,9 +49,9 @@ private:
 
 	// const char* cgroupV1UidPath = "/dev/jark_freezer/uid_%d"; // 这是普通的freezer V1
 	// 默认路径是/dev/jark_freezer/frozen/cgroup.procs
-	const char* cgroupV1FrozenPath = "/sys/fs/cgroup/freezer/cgroup.procs";
+	const char* cgroupV1FrozenPath = "/dev/jark_freezer/frozen/cgroup.procs";
 	// 默认路径是/dev/jark_freezer/unfrozen/cgroup.procs
-	const char* cgroupV1UnfrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";
+	const char* cgroupV1UnfrozenPath = "/dev/jark_freezer/unfrozen/cgroup.procs";
 
 	// 这是freezer V1+ 如果系统默认挂载上了freezer V1就使用这个 PS:MIUI使用这个能防止V1内存泄漏 仅限MIUI13 
 	const char* cgroupV1UidFrozenPath = "/sys/fs/cgroup/freezer/cgroup.procs";
