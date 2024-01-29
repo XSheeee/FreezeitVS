@@ -1,3 +1,9 @@
+v1-zeta
+	XShe:
+		禁用XXX-断网配置
+	魔威:
+		修复部分机型无法使用FreezerV1
+
 v1-epsilon
 	XShe:
 		更改管理器图标

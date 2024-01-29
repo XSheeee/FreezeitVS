@@ -15,21 +15,20 @@ private:
 			6,  //[0] 设置文件版本
 			0,  //[1] 绑定到 CPU核心簇
 			10, //[2] freezeTimeout sec
-			
-			30, //[3] wakeupTimeoutMin min 30分钟进行定时解冻
+			20, //[3] wakeupTimeoutMin min
 			20, //[4] terminateTimeout sec
 			5,  //[5] setMode
 			2,  //[6] refreezeTimeout
 			0,  //[7]
 			0,  //[8]
 			0,  //[9]
-			0,  //[10] 激进前台识别 //关闭后解决解冻失败问题 但会增加功耗
+			1,  //[10] 激进前台识别
 			0,  //[11]
 			0,  //[12]
 			0,  //[13] 电池监控
 			0,  //[14] 电流校准
 			0,  //[15] QQ/TIM冻结断网
-			0,  //[16] 调整 lmk 参数 仅安卓11-15
+			1,  //[16] 调整 lmk 参数 仅安卓11-15
 			0,  //[17] 深度Doze
 			0,  //[18] 扩展前台
 			1,  //[19]
@@ -50,7 +49,7 @@ private:
 
 public:
 	uint8_t& settingsVer = settingsVar[0];       // 设置文件版本
-	uint8_t& clusterBind = settingsVar[1];       // 绑定到 CPU簇 0-7
+	uint8_t& clusterBind = settingsVar[1];       // 绑定到 CPU簇 0-6
 	uint8_t& freezeTimeout = settingsVar[2];     // 单位 秒
 	uint8_t& wakeupTimeoutMin = settingsVar[3];  // 单位 分
 	uint8_t& terminateTimeout = settingsVar[4];  // 单位 秒
@@ -104,8 +103,8 @@ public:
 					isError = true;
 				}
 				if (refreezeTimeoutIdx > 4) {
-					freezeit.log("定时压制参数[%d]错误, 已重设为 一小时", static_cast<int>(refreezeTimeoutIdx));
-					refreezeTimeoutIdx = 3;
+					freezeit.log("定时压制参数[%d]错误, 已重设为 30分钟", static_cast<int>(refreezeTimeoutIdx));
+					refreezeTimeoutIdx = 2;
 					isError = true;
 				}
 				if (freezeTimeout < 1 || freezeTimeout > 60) {
@@ -113,9 +112,9 @@ public:
 					freezeTimeout = 10;
 					isError = true;
 				}
-				if (wakeupTimeoutMin < 0 || wakeupTimeoutMin > 120) {
-					freezeit.log("定时解冻参数[%d]错误, 已重置为一小时", static_cast<int>(wakeupTimeoutMin));
-					wakeupTimeoutMin = 60;
+				if (wakeupTimeoutMin < 3 || wakeupTimeoutMin > 120) {
+					freezeit.log("定时解冻参数[%d]错误, 已重置为30分", static_cast<int>(wakeupTimeoutMin));
+					wakeupTimeoutMin = 30;
 					isError = true;
 				}
 				if (terminateTimeout < 3 || terminateTimeout > 120) {
@@ -164,6 +163,7 @@ public:
 			return "[4] [5] [6] [7]";
 		}
 	}
+
 	int getRefreezeTimeout() {
 		constexpr int timeoutList[5] = { 86400 * 365, 900, 1800, 3600, 7200 };
 		return timeoutList[refreezeTimeoutIdx < 5 ? refreezeTimeoutIdx : 0];
@@ -202,14 +202,14 @@ public:
 			  break;
 
 		case 3: {  // wakeupTimeoutMin min
-			if (val < 0 || 120 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "定时解冻参数错误, 正常范围:0~120, 欲设为:%d", val);
+			if (val < 3 || 120 < val)
+				return snprintf(replyBuf, REPLY_BUF_SIZE, "定时解冻参数错误, 正常范围:3~120, 欲设为:%d", val);
 		}
 			  break;
 
 		case 4: { // TERMINATE sec
-			if (val < 0 || 120 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "超时杀死参数错误, 正常范围:0~120, 欲设为:%d", val);
+			if (val < 3 || 120 < val)
+				return snprintf(replyBuf, REPLY_BUF_SIZE, "超时杀死参数错误, 正常范围:3~120, 欲设为:%d", val);
 		}
 			  break;
 
@@ -246,7 +246,7 @@ public:
 		case 28: //
 		case 29: //
 		case 30: // Doze调试日志
-		case 31: // Binder检测
+		case 31:
 		{
 			if (val != 0 && val != 1)
 				return snprintf(replyBuf, REPLY_BUF_SIZE, "开关值错误, 正常范围:0/1, 欲设为:%d", val);
@@ -255,7 +255,7 @@ public:
 
 		default: {
 			freezeit.log("🔧设置失败，设置项不存在, [%d]:[%d]", idx, val);
-			return snprintf(replyBuf, REPLY_BUF_SIZE, "非法:设置项不存在, [%d]:[%d]", idx, val);
+			return snprintf(replyBuf, REPLY_BUF_SIZE, "设置项不存在, [%d]:[%d]", idx, val);
 		}
 		}
 
