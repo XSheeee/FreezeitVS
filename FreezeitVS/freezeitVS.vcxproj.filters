@@ -82,7 +82,7 @@
     <None Include="build_x64.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="changelog.txt" />
+    <Text Include="changelog.md" />
     <Text Include="changelogFull.txt" />
     <Text Include="magisk\appcfg.txt">
       <Filter>magisk</Filter>

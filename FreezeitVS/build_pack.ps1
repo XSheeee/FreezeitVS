@@ -27,7 +27,7 @@ $cppFlags = "-std=c++20 -static -s -Ofast -Wall -Wextra -Wshadow -fno-exceptions
 log "Compiler..."
 & $clang $target $sysroot $cppFlags.Split(' ') -I. main.cpp -o magisk/${id}
 
-Copy-Item changelog.txt magisk -force
+Copy-Item changelog.md magisk -force
 
 
 $releaseDir = "D:\freezeit\freezeitRelease"
@@ -68,12 +68,12 @@ $jsonContent = "{
     `"version`": `"$version`",
     `"versionCode`": $versionCode,
     `"zipUrl`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/$zipFile`",
-    `"changelog`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/changelog.txt`"`n}"
+    `"changelog`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/changelog.md`"`n}"
 $jsonContent > ${releaseDir}/update.json
 
 Copy-Item README.md  ${releaseDir}/README.md -force
-Get-Content changelog.txt >> ${releaseDir}/README.md
-Copy-Item changelog.txt ${releaseDir}/changelog.md -force
+Get-Content changelog.md >> ${releaseDir}/README.md
+Copy-Item changelog.md ${releaseDir}/changelog.md -force
 Copy-Item changelogFull.txt ${releaseDir}/changelogFull.txt -force
 
 log "All done"

@@ -48,7 +48,7 @@
     <None Include="note\冻它2.6.2 _冻结操作逻辑路线.xlsx" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="changelog.txt" />
+    <Text Include="changelog.md" />
     <Text Include="changelogFull.txt" />
     <Text Include="magisk\appcfg.txt" />
     <Text Include="magisk\applabel.txt" />
