@@ -118,7 +118,16 @@ public:
 			freezeit.log("不支持自定义Freezer类型 V1(FROZEN) 失败");
 		}
 						   break;
-
+		case WORK_MODE::V1UID: {
+			if (mountFreezerV1()) {
+				workMode = WORK_MODE::V1UID;
+				freezeit.setWorkMode(workModeStr(workMode));
+				freezeit.log("Freezer类型已设为 V1(UID)");
+				return;
+			}
+			freezeit.log("不支持的Freezer类型 V1(UID)");
+		}
+							 break;
 		case WORK_MODE::V1F_ST: {
 			if (mountFreezerV1()) {
 				workMode = WORK_MODE::V1F_ST;
