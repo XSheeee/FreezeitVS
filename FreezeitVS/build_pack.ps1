@@ -73,7 +73,7 @@ $jsonContent > ${releaseDir}/update.json
 
 Copy-Item README.md  ${releaseDir}/README.md -force
 Get-Content changelog.txt >> ${releaseDir}/README.md
-Copy-Item changelog.txt ${releaseDir}/changelog.txt -force
+Copy-Item changelog.txt ${releaseDir}/changelog.md -force
 Copy-Item changelogFull.txt ${releaseDir}/changelogFull.txt -force
 
 log "All done"
