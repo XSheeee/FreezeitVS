@@ -67,8 +67,8 @@ log "Creating... update json"
 $jsonContent = "{
     `"version`": `"$version`",
     `"versionCode`": $versionCode,
-    `"zipUrl`": `"https://github.com/XSheeee/freezeitRelease/blob/main/$zipFile`",
-    `"changelog`": `"https://github.com/XSheeee/freezeitRelease/blob/main/changelog.txt`"`n}"
+    `"zipUrl`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/$zipFile`",
+    `"changelog`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/changelog.txt`"`n}"
 $jsonContent > ${releaseDir}/update.json
 
 Copy-Item README.md  ${releaseDir}/README.md -force
