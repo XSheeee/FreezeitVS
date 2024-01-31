@@ -73,7 +73,8 @@ public:
 		const string modeStrList[] = {
 				"全局SIGSTOP",
 				"FreezerV1 (FROZEN)",
-				"FreezerV1 (FRZ+ST)",
+				"FreezerV1 (FROZEN+SIGTOP)",
+				"FreezerV1+ (FROZEN)",
 				"FreezerV2 (UID)",
 				"FreezerV2 (FROZEN)",
 				"Unknown" };
@@ -128,14 +129,14 @@ public:
 			freezeit.log("不支持的Freezer类型 V1(UID)");
 		}
 							 break;
-		case WORK_MODE::V1F_ST: {
+		case WORK_MODE::V1F_PLUS: {
 			if (mountFreezerV1()) {
-				workMode = WORK_MODE::V1F_ST;
+				workMode = WORK_MODE::V1F_PLUS;
 				freezeit.setWorkMode(workModeStr(workMode));
-				freezeit.log("Freezer类型已设为 V1(FRZ+ST)");
+				freezeit.log("Freezer类型已设为 V1+(FROZEN)");
 				return;
 			}
-			freezeit.log("不支持自定义Freezer类型 V1(FRZ+ST)");
+			freezeit.log("不支持自定义Freezer类型 V1+(FROZEN)");
 		}
 							  break;
 
@@ -182,7 +183,7 @@ public:
 	}
 
 	bool isV1Mode() {
-		return workMode == WORK_MODE::V1F_ST || workMode == WORK_MODE::V1F;
+		return workMode == WORK_MODE::V1F_PLUS || workMode == WORK_MODE::V1F;
 	}
 
 	void getPids(appInfoStruct& info, const int uid) {
@@ -362,24 +363,24 @@ public:
 		}
 							 break;
 
-		case WORK_MODE::V1F_ST: {
+		case WORK_MODE::V1F_PLUS: {
 			if (signal == SIGSTOP) {
 				for (const int pid : pids) {
 					if (!Utils::writeInt(cgroupV1FrozenPath, pid))
-						freezeit.log("冻结 [%s PID:%d] 失败(V1F_ST_F)",
+						freezeit.log("冻结 [%s PID:%d] 失败(V1F_PLUS)",
 							managedApp[uid].label.c_str(), pid);
 					if (kill(pid, signal) < 0)
-						freezeit.log("冻结 [%s PID:%d] 失败(V1F_ST_S)",
+						freezeit.log("冻结 [%s PID:%d] 失败(V1F_PLUS)",
 							managedApp[uid].label.c_str(), pid);
 				}
 			}
 			else {
 				for (const int pid : pids) {
 					if (kill(pid, signal) < 0)
-						freezeit.log("解冻 [%s PID:%d] 失败(V1F_ST_S)",
+						freezeit.log("解冻 [%s PID:%d] 失败(V1F_PLUS)",
 							managedApp[uid].label.c_str(), pid);
 					if (!Utils::writeInt(cgroupV1UnfrozenPath, pid))
-						freezeit.log("解冻 [%s PID:%d] 失败(V1F_ST_F)",
+						freezeit.log("解冻 [%s PID:%d] 失败(V1F_PLUS)",
 							managedApp[uid].label.c_str(), pid);
 				}
 			}

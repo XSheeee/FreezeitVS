@@ -56,12 +56,15 @@ public:
 	uint8_t& setMode = settingsVar[5];           // Freezer模式
 	uint8_t& refreezeTimeoutIdx = settingsVar[6];// 定时压制 参数索引 0-4
 
+	uint8_t& enableCurrent = settingsVar[10];   // 激进前台识别
+
+
 	uint8_t& enableBatteryMonitor = settingsVar[13];   // 电池监控
 	uint8_t& enableCurrentFix = settingsVar[14];       // 电池电流校准
 	uint8_t& enableBreakNetwork = settingsVar[15];     // QQ/TIM冻结断网
 	uint8_t& enableLMK = settingsVar[16];              // 调整 lmk 参数 仅安卓11-15
 	uint8_t& enableDoze = settingsVar[17];             // 深度Doze
-
+    uint8_t& enableExtend_fg = settingsVar[18];   // 拓展前台识别
 	uint8_t& enableScreenDebug = settingsVar[30];        // Doze调试日志
 	uint8_t& BinderFreezer = settingsVar[31];//Binder检测
 	Settings& operator=(Settings&&) = delete;
@@ -208,7 +211,7 @@ public:
 			  break;
 
 		case 4: { // TERMINATE sec
-			if (val < 6 || 120 < val)
+			if (val < 0 || 120 < val)
 				return snprintf(replyBuf, REPLY_BUF_SIZE, "超时杀死参数错误, 正常范围:0~120, 欲设为:%d", val);
 		}
 			  break;
@@ -225,7 +228,7 @@ public:
 		}
 			  break;
 
-		case 10: // xxx
+		case 10: // 激进前台识别
 		case 11: // xxx
 		case 12: // xxx
 		case 13: // 电池监控

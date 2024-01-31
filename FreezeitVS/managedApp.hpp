@@ -33,7 +33,8 @@ private:
 			"com.xiaomi.account",                   // 小米账号
 			"com.mfashiongallery.emag",             // 小米画报
 			"com.huawei.hwid",                      // HMS core服务
-
+            "com.tencent.mobileqq:MSF",             // QQ推送进程
+			"com.tencent.tim:MSF",                  // TIM推送进程
 			"cn.litiaotiao.app",                    // 李跳跳
 			"com.litiaotiao.app",                   // 李跳跳
 			"hello.litiaotiao.app",                 // 李跳跳
