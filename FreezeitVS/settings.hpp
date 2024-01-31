@@ -217,8 +217,8 @@ public:
 			  break;
 
 		case 5: { // setMode 0-5
-			if (5 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "冻结模式参数错误, 正常范围:0~5, 欲设为:%d", val);
+			if (6 < val)
+				return snprintf(replyBuf, REPLY_BUF_SIZE, "冻结模式参数错误, 正常范围:0~6, 欲设为:%d", val);
 		}
 			  break;
 
