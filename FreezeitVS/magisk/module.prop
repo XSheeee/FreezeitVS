@@ -1,7 +1,7 @@
 id=freezeit
 name=冻它λ
-version=v1.0FR
-versionCode=1706678947
+version=v1.1FR
+versionCode=1706685288
 author=XShe/MoWei
 description=原作者@Jark006|(实现部分墓碑机制，自动暂停后台应用运行，在原有的基础使CPU保持流畅的省电的模块)|本改版旨在原版基础上构建一个更[稳定][省电][持久]的墓碑模块
-updateJson=https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/update.json
+updateJson=https://gitee.com/XShee/freezeit-release/raw/release/update.json
