@@ -107,7 +107,6 @@
     <Text Include="note\pmHelp.txt">
       <Filter>note</Filter>
     </Text>
-    <Text Include="..\..\..\..\freezeit\freezeitRelease\changelogFull.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="note\ic_launcher_background.png">
