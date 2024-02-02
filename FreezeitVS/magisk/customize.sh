@@ -1,5 +1,33 @@
 chmod a+x "$MODPATH"/freezeit
 chmod a+x "$MODPATH"/service.sh
+sponsor(){
+    echo "#################################
+ - 按音量键＋: 赞助作者
+ - 按音量键－: 取消赞助
+#################################"
+    while true; do
+        choose="$(getevent -qlc 1 | awk '{ print $3 }')"
+        case "${choose}" in
+            KEY_VOLUMEUP)
+                echo "感谢支持"
+                am start -a android.intent.action.VIEW -d https://afdian.net/a/XShe519 >/dev/null &
+                break
+                ;;
+            KEY_VOLUMEDOWN)
+                break
+                ;;
+            *)
+                continue
+                ;;
+        esac
+    done
+ }
+ freezer_path="/data/adb/modules/freezeit"
+# 赞助支持
+if [[ ! -f $freezer_path/.sponsor ]]; then
+    sponsor
+    echo 'yes' > $freezer_path/.sponsor
+fi
 
 output=$(pm uninstall cn.myflv.android.noanr)
 if [ "$output" == "Success" ]; then
@@ -80,10 +108,47 @@ output=$(pm list packages io.github.jark006.freezeit)
 if [ ${#output} -lt 2 ]; then
     echo "- !!! ⚠️ 首次安装, 安装完毕后, 请到LSPosed管理器启用冻它, 然后再重启"
 fi
+android_version=$(getprop ro.build.version.release)
 
+#这里是小于Android13的操作
+if [ "$android_version" -lt 13 ]
+then
 module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
-fullApkPath=$(ls "$MODPATH"/freezeit*.apk)
+fullApkPath=$(ls "$MODPATH"/FreezeitLambda10*.apk)
+apkPath=$TMPDIR/freezeit.apk
+mv -f "$fullApkPath" "$apkPath"
+chmod 666 "$apkPath"
+echo "- 冻它APP 正在安装..."
+output=$(pm install -r -f "$apkPath" 2>&1)
+if [ "$output" == "Success" ]; then
+    echo "- 冻它APP 安装成功"
+    rm -rf "$apkPath"
+else
+    echo "- 冻它APP 安装失败, 原因: [$output] 尝试卸载再安装..."
+    pm uninstall io.github.jark006.freezeit
+    sleep 1
+    output=$(pm install -r -f "$apkPath" 2>&1)
+    if [ "$output" == "Success" ]; then
+        echo "- 冻它APP 安装成功"
+        echo "- !!! ⚠️请到LSPosed管理器重新启用冻它, 然后再重启"
+        rm -rf "$apkPath"
+    else
+        apkPathSdcard="/sdcard/freezeit_${module_version}.apk"
+        cp -f "$apkPath" "$apkPathSdcard"
+        echo "!!! *********************** !!!"
+        echo "  冻它APP 依旧安装失败, 原因: [$output]"
+        echo "  请手动安装 [ $apkPathSdcard ]"
+        echo "  如果是降级安装, 请手动卸载冻它APP, 然后再次安装。"
+        echo "!!! *********************** !!!"
+    fi
+fi
+#这里是大于Android12的操作
+elif [ "$android_version" -gt 12 ]
+then
+module_version="$(grep_prop version "$MODPATH"/module.prop)"
+echo "- 正在安装 $module_version"
+fullApkPath=$(ls "$MODPATH"/FreezeitLambda13*.apk)
 apkPath=$TMPDIR/freezeit.apk
 mv -f "$fullApkPath" "$apkPath"
 chmod 666 "$apkPath"
@@ -111,6 +176,7 @@ else
         echo "  如果是降级安装, 请手动卸载冻它APP, 然后再次安装。"
         echo "!!! *********************** !!!"
     fi
+fi
 fi
 
 # 仅限 MIUI 12~15

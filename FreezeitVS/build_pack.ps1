@@ -16,7 +16,7 @@ $version = Get-Content magisk/module.prop | Where-Object { $_ -match "version=" 
 $version = $version.split('=')[1]
 $versionCode = Get-Content magisk/module.prop | Where-Object { $_ -match "versionCode=" }
 $versionCode = $versionCode.split('=')[1]
-$zipFile = "${id}_v${version}.zip"
+$zipFile = "${id}_${version}.zip"
 
 $windowsToolchainsDir = "D:\AndroidStudio\AndroidSDK\ndk\26.1.10909125\toolchains\llvm\prebuilt\windows-x86_64\bin"
 $clang = "${windowsToolchainsDir}/clang++.exe"
@@ -67,8 +67,8 @@ log "Creating... update json"
 $jsonContent = "{
     `"version`": `"$version`",
     `"versionCode`": $versionCode,
-    `"zipUrl`": `"https://gitee.com/XShee/freezeit-release/raw/release/$zipFile`",
-    `"changelog`": `"https://gitee.com/XShee/freezeit-release/raw/release/changelog.md`"`n}"
+    `"zipUrl`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/$zipFile`",
+    `"changelog`": `"https://raw.githubusercontent.com/XSheeee/freezeitRelease/main/changelog.md`"`n}"
 $jsonContent > ${releaseDir}/update.json
 
 Copy-Item README.md  ${releaseDir}/README.md -force

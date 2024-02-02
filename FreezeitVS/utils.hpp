@@ -101,9 +101,9 @@ enum class WORK_MODE : uint32_t {
 	GLOBAL_SIGSTOP = 0,
 	V1F = 1,
 	V1UID = 2,
-	V1F_PLUS = 3,
+	V1F_ST = 3,
 	V2UID = 4,
-	V2FROZEN = 5,
+	V2FROZEN = 5
 };
 
 enum class FREEZE_MODE : uint32_t {

@@ -73,7 +73,7 @@ public:
 		const string modeStrList[] = {
 				"全局SIGSTOP",
 				"FreezerV1 (FROZEN)",
-				"FreezerV1 (FROZEN+SIGTOP)",
+				"FreezerV1 (FRZ+SIG)",
 				"FreezerV1+ (FROZEN)",
 				"FreezerV2 (UID)",
 				"FreezerV2 (FROZEN)",
@@ -119,24 +119,16 @@ public:
 			freezeit.log("不支持自定义Freezer类型 V1(FROZEN) 失败");
 		}
 						   break;
-		case WORK_MODE::V1UID: {
-			if (mountFreezerV1()) {
-				workMode = WORK_MODE::V1UID;
-				freezeit.setWorkMode(workModeStr(workMode));
-				freezeit.log("Freezer类型已设为 V1(UID)");
-				return;
-			}
-			freezeit.log("不支持的Freezer类型 V1(UID)");
-		}
+
 							 break;
-		case WORK_MODE::V1F_PLUS: {
+		case WORK_MODE::V1F_ST: {
 			if (mountFreezerV1()) {
-				workMode = WORK_MODE::V1F_PLUS;
+				workMode = WORK_MODE::V1F_ST;
 				freezeit.setWorkMode(workModeStr(workMode));
-				freezeit.log("Freezer类型已设为 V1+(FROZEN)");
+				freezeit.log("Freezer类型已设为 V1(FRZ+ST)");
 				return;
 			}
-			freezeit.log("不支持自定义Freezer类型 V1+(FROZEN)");
+			freezeit.log("不支持自定义Freezer类型 V1(FRZ+ST)");
 		}
 							  break;
 
@@ -183,7 +175,7 @@ public:
 	}
 
 	bool isV1Mode() {
-		return workMode == WORK_MODE::V1F_PLUS || workMode == WORK_MODE::V1F;
+		return workMode == WORK_MODE::V1F_ST || workMode == WORK_MODE::V1F;
 	}
 
 	void getPids(appInfoStruct& info, const int uid) {
@@ -363,24 +355,24 @@ public:
 		}
 							 break;
 
-		case WORK_MODE::V1F_PLUS: {
+		case WORK_MODE::V1F_ST: {
 			if (signal == SIGSTOP) {
 				for (const int pid : pids) {
 					if (!Utils::writeInt(cgroupV1FrozenPath, pid))
-						freezeit.log("冻结 [%s PID:%d] 失败(V1F_PLUS)",
+						freezeit.log("冻结 [%s PID:%d] 失败(V1F_ST_F)",
 							managedApp[uid].label.c_str(), pid);
 					if (kill(pid, signal) < 0)
-						freezeit.log("冻结 [%s PID:%d] 失败(V1F_PLUS)",
+						freezeit.log("冻结 [%s PID:%d] 失败(V1F_ST_S)",
 							managedApp[uid].label.c_str(), pid);
 				}
 			}
 			else {
 				for (const int pid : pids) {
 					if (kill(pid, signal) < 0)
-						freezeit.log("解冻 [%s PID:%d] 失败(V1F_PLUS)",
+						freezeit.log("解冻 [%s PID:%d] 失败(V1F_ST_S)",
 							managedApp[uid].label.c_str(), pid);
 					if (!Utils::writeInt(cgroupV1UnfrozenPath, pid))
-						freezeit.log("解冻 [%s PID:%d] 失败(V1F_PLUS)",
+						freezeit.log("解冻 [%s PID:%d] 失败(V1F_ST_F)",
 							managedApp[uid].label.c_str(), pid);
 				}
 			}
@@ -606,9 +598,7 @@ public:
 			usleep(1000 * 100);
 			systemTools.breakNetworkByLocalSocket(uid);
 			freezeit.log("定时压制 断网 [%s]", managedApp[uid].label.c_str());
-			system("kill -9 com.tencent.tim:msf");
-			system("kill -9 com.tencent.mobileqq:msf");
-			freezeit.log("定时压制 杀死推送进程 [%s]", managedApp[uid].label.c_str());
+
 		}
 
 		END_TIME_COUNT;

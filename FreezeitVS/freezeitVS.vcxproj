@@ -48,8 +48,8 @@
     <None Include="note\冻它2.6.2 _冻结操作逻辑路线.xlsx" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="..\..\..\..\freezeit\freezeitRelease\changelogFull.txt" />
     <Text Include="changelog.md" />
-    <Text Include="changelogFull.txt" />
     <Text Include="magisk\appcfg.txt" />
     <Text Include="magisk\applabel.txt" />
     <Text Include="magisk\changelog.txt" />

@@ -15,7 +15,7 @@ private:
 			6,  //[0] 设置文件版本
 			0,  //[1] 绑定到 CPU核心簇
 			10, //[2] freezeTimeout sec
-			20, //[3] wakeupTimeoutMin min
+		    4, //[3] wakeupTimeoutMin min
 			20, //[4] terminateTimeout sec
 			5,  //[5] setMode
 			2,  //[6] refreezeTimeout
@@ -28,9 +28,9 @@ private:
 			0,  //[13] 电池监控
 			0,  //[14] 电流校准
 			0,  //[15] QQ/TIM冻结断网
-			1,  //[16] 调整 lmk 参数 仅安卓11-15
+			0,  //[16] 调整 lmk 参数 仅安卓11-15
 			0,  //[17] 深度Doze
-			0,  //[18] 扩展前台
+			1,  //[18] 扩展前台
 			1,  //[19]
 			0,  //[20]
 			0,  //[21]
@@ -46,6 +46,16 @@ private:
 			0,  //[31] Binder检测
 			0,  //[32]
 	};
+
+    // 关闭, 30m, 1h, 2h
+    static constexpr int refreezeTimeoutList[] = { 86400 * 365, 60 * 30, 3600, 3600 * 2 };
+    // 最大索引
+    static constexpr int refreezeTimeoutIdxMax = sizeof(refreezeTimeoutList) / sizeof(refreezeTimeoutList[0]) - 1;
+
+    // 关闭, 5m, 15m, 30m, 1h, 2h
+    static constexpr int wakeupTimeoutList[] = { 86400 * 365, 60 * 5, 60 * 15, 60 * 30, 3600, 3600 * 2 };
+    // 最大索引
+    static constexpr int wakeupTimeoutIdxMax = sizeof(wakeupTimeoutList) / sizeof(wakeupTimeoutList[0]) - 1;
 
 public:
 	uint8_t& settingsVer = settingsVar[0];       // 设置文件版本
@@ -105,21 +115,24 @@ public:
 					setMode = 0;
 					isError = true;
 				}
-				if (refreezeTimeoutIdx > 4) {
-					freezeit.log("定时压制参数[%d]错误, 已重设为 30分钟", static_cast<int>(refreezeTimeoutIdx));
-					refreezeTimeoutIdx = 2;
-					isError = true;
-				}
+				if (refreezeTimeoutIdx > refreezeTimeoutIdxMax) {
+                    isError = true;
+                    refreezeTimeoutIdx = 15;
+                    freezeit.logFmt("定时压制参数[%d]错误, 已重设为 %d 分钟",
+                        static_cast<int>(refreezeTimeoutIdx), refreezeTimeoutList[refreezeTimeoutIdx] / 60);
+                }
 				if (freezeTimeout < 1 || freezeTimeout > 60) {
 					freezeit.log("超时冻结参数[%d]错误, 已重置为10秒", static_cast<int>(freezeTimeout));
 					freezeTimeout = 10;
 					isError = true;
 				}
-				if (wakeupTimeoutMin < 3 || wakeupTimeoutMin > 120) {
-					freezeit.log("定时解冻参数[%d]错误, 已重置为30分", static_cast<int>(wakeupTimeoutMin));
-					wakeupTimeoutMin = 30;
-					isError = true;
-				}
+				 if (wakeupTimeoutIdx > wakeupTimeoutIdxMax) {
+                    isError = true;
+					// 错误就十五分钟解冻
+                    wakeupTimeoutIdx = 15;
+                    freezeit.logFmt("定时解冻参数[%d]错误, 已重置为 %d 分钟",
+                        static_cast<int>(wakeupTimeoutIdx), wakeupTimeoutList[wakeupTimeoutIdx] / 5);
+                }
 				if (terminateTimeout < 3 || terminateTimeout > 120) {
 					freezeit.log("超时杀死参数[%d]错误, 已重置为30秒", static_cast<int>(terminateTimeout));
 					terminateTimeout = 30;
@@ -139,7 +152,7 @@ public:
 		return settingsVar[key];
 	}
 
-	uint8_t* get() {
+	uint8_t* get() { 
 		return settingsVar;
 	}
 
@@ -167,10 +180,19 @@ public:
 		}
 	}
 
-	int getRefreezeTimeout() {
-		constexpr int timeoutList[5] = { 86400 * 365, 900, 1800, 3600, 7200 };
-		return timeoutList[refreezeTimeoutIdx < 5 ? refreezeTimeoutIdx : 0];
-	}
+    bool isRefreezeEnable() const {
+        return refreezeTimeoutIdx > 0 && refreezeTimeoutIdx < (sizeof(refreezeTimeoutList) / sizeof(refreezeTimeoutList[0]));
+    }
+    int getRefreezeTimeout() const {
+        return refreezeTimeoutList[refreezeTimeoutIdx < (sizeof(refreezeTimeoutList) / sizeof(refreezeTimeoutList[0])) ? refreezeTimeoutIdx : 0];
+    }
+
+    bool isWakeupEnable() const {
+        return wakeupTimeoutIdx > 0 && wakeupTimeoutIdx < (sizeof(wakeupTimeoutList) / sizeof(wakeupTimeoutList[0]));
+    }
+    int getWakeupTimeout() const {
+        return wakeupTimeoutList[wakeupTimeoutIdx < (sizeof(wakeupTimeoutList) / sizeof(wakeupTimeoutList[0])) ? wakeupTimeoutIdx : 0];
+    }
 
 	bool save() {
 		lock_guard<mutex> lock(writeSettingMutex);
@@ -204,29 +226,29 @@ public:
 		}
 			  break;
 
-		case 3: {  // wakeupTimeoutMin min
-			if (val < 0 || 120 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "定时解冻参数错误, 正常范围:0~120, 欲设为:%d", val);
-		}
-			  break;
+	      case 3: {  // wakeupTimeoutIdx
+            if (val > wakeupTimeoutIdxMax)
+                return snprintf(replyBuf, REPLY_BUF_SIZE, "定时解冻参数错误 欲设为:%d", val);
+        }
+              break;
 
 		case 4: { // TERMINATE sec
-			if (val < 0 || 120 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "超时杀死参数错误, 正常范围:0~120, 欲设为:%d", val);
+			if (val < 3 || 120 < val)
+				return snprintf(replyBuf, REPLY_BUF_SIZE, "超时杀死参数错误, 正常范围:3~120, 欲设为:%d", val);
 		}
 			  break;
 
 		case 5: { // setMode 0-5
-			if (6 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "冻结模式参数错误, 正常范围:0~6, 欲设为:%d", val);
+			if (5 < val)
+				return snprintf(replyBuf, REPLY_BUF_SIZE, "冻结模式参数错误, 正常范围:0~5, 欲设为:%d", val);
 		}
 			  break;
 
-		case 6: { // 定时压制
-			if (5 < val)
-				return snprintf(replyBuf, REPLY_BUF_SIZE, "定时压制参数错误, 正常范围:0~5, 欲设为:%d", val);
-		}
-			  break;
+	 case 6: { // refreezeTimeoutIdx
+            if (val > refreezeTimeoutIdxMax)
+                return snprintf(replyBuf, REPLY_BUF_SIZE, "定时压制参数错误, 欲设为:%d", val);
+        }
+              break;
 
 		case 10: // 激进前台识别
 		case 11: // xxx
