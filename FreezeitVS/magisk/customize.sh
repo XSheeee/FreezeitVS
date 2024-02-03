@@ -110,8 +110,8 @@ if [ ${#output} -lt 2 ]; then
 fi
 android_version=$(getprop ro.build.version.release)
 
-#这里是小于Android13的操作
-if [ "$android_version" -lt 13 ]
+#这里是小于等于Android12的操作
+if [ "$android_version" -le 12 ]
 then
 module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
@@ -143,8 +143,8 @@ else
         echo "!!! *********************** !!!"
     fi
 fi
-#这里是大于Android12的操作
-elif [ "$android_version" -gt 12 ]
+#这里是大于等于Android13的操作
+elif [ "$android_version" -ge 13 ]
 then
 module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
@@ -179,9 +179,11 @@ else
 fi
 fi
 
-# 仅限 MIUI 12~15
+
+
+# 仅限 MIUI 12~hos
 MIUI_VersionCode=$(getprop ro.miui.ui.version.code)
-if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 817 ]; then
+if [ "$MIUI_VersionCode" -ge 12 ] && [ "$MIUI_VersionCode" -le 816 ]; then
     echo "- 已配置禁用Millet参数"
 else
     rm "$MODPATH"/system.prop
@@ -190,11 +192,11 @@ fi
 echo ""
 cat "$MODPATH"/changelog.txt
 echo ""
-echo ""
 echo "- 安装完毕, 重启生效"
 echo "- 安卓墓碑频道:Tombstone6"
-echo "- 改版Q群:697991010"
-echo "- 改版QQ频道:r6197e72b1"
+echo "- λ版Q群:697991010"
+echo "- λ版QQ频道:r6197e72b1"
+echo "- 官网:https://mowei.anmo2077.tk/"
 echo "- 若出现异常日志, 请反馈给作者, 谢谢"
 echo "- [ /sdcard/Android/freezeit_crash_log.txt ]"
 echo ""

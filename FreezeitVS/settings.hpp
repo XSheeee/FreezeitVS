@@ -61,7 +61,7 @@ public:
 	uint8_t& settingsVer = settingsVar[0];       // 设置文件版本
 	uint8_t& clusterBind = settingsVar[1];       // 绑定到 CPU簇 0-6
 	uint8_t& freezeTimeout = settingsVar[2];     // 单位 秒
-	uint8_t& wakeupTimeoutMin = settingsVar[3];  // 单位 分
+	uint8_t& wakeupTimeoutIdx = settingsVar[3];  // 单位 分
 	uint8_t& terminateTimeout = settingsVar[4];  // 单位 秒
 	uint8_t& setMode = settingsVar[5];           // Freezer模式
 	uint8_t& refreezeTimeoutIdx = settingsVar[6];// 定时压制 参数索引 0-4
@@ -118,7 +118,7 @@ public:
 				if (refreezeTimeoutIdx > refreezeTimeoutIdxMax) {
                     isError = true;
                     refreezeTimeoutIdx = 15;
-                    freezeit.logFmt("定时压制参数[%d]错误, 已重设为 %d 分钟",
+                    freezeit.log("定时压制参数[%d]错误, 已重设为 %d 分钟",
                         static_cast<int>(refreezeTimeoutIdx), refreezeTimeoutList[refreezeTimeoutIdx] / 60);
                 }
 				if (freezeTimeout < 1 || freezeTimeout > 60) {
@@ -130,7 +130,7 @@ public:
                     isError = true;
 					// 错误就十五分钟解冻
                     wakeupTimeoutIdx = 15;
-                    freezeit.logFmt("定时解冻参数[%d]错误, 已重置为 %d 分钟",
+                    freezeit.log("定时解冻参数[%d]错误, 已重置为 %d 分钟",
                         static_cast<int>(wakeupTimeoutIdx), wakeupTimeoutList[wakeupTimeoutIdx] / 5);
                 }
 				if (terminateTimeout < 3 || terminateTimeout > 120) {

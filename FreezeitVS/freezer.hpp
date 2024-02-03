@@ -448,7 +448,7 @@ public:
 		}
 		}
 
-		if (settings.wakeupTimeoutMin != 120) {
+		if (settings.wakeupTimeoutIdx != 120) {
 			// 无论冻结还是解冻都要清除 解冻时间线上已设置的uid
 			auto it = unfrozenIdx.find(uid);
 			if (it != unfrozenIdx.end())
@@ -458,7 +458,7 @@ public:
 			if (signal == SIGSTOP && info.pids.size() &&
 				info.freezeMode != FREEZE_MODE::TERMINATE) {
 				uint32_t nextIdx =
-					(timelineIdx + settings.wakeupTimeoutMin * 60) & 0x0FFF; // [ %4096]
+					(timelineIdx + settings.wakeupTimeoutIdx * 60) & 0x0FFF; // [ %4096]
 				unfrozenIdx[uid] = nextIdx;
 				unfrozenTimeline[nextIdx] = uid;
 			}
