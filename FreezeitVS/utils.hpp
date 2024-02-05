@@ -100,10 +100,11 @@ constexpr auto FORK_DOUBLE = 1;
 enum class WORK_MODE : uint32_t {
 	GLOBAL_SIGSTOP = 0,
 	V1F = 1,
-	V1UID = 2,
+	V1P = 2,
 	V1F_ST = 3,
 	V2UID = 4,
-	V2FROZEN = 5
+	V2FROZEN = 5,
+	Auto=6
 };
 
 enum class FREEZE_MODE : uint32_t {

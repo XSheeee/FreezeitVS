@@ -115,7 +115,7 @@ if [ "$android_version" -le 12 ]
 then
 module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
-fullApkPath=$(ls "$MODPATH"/FreezeitLambda10*.apk)
+fullApkPath=$(ls "$MODPATH"/FreezeitLambda10.apk)
 apkPath=$TMPDIR/freezeit.apk
 mv -f "$fullApkPath" "$apkPath"
 chmod 666 "$apkPath"
@@ -148,10 +148,10 @@ elif [ "$android_version" -ge 13 ]
 then
 module_version="$(grep_prop version "$MODPATH"/module.prop)"
 echo "- 正在安装 $module_version"
-fullApkPath=$(ls "$MODPATH"/FreezeitLambda13*.apk)
+fullApkPath=$(ls "$MODPATH"/FreezeitLambda13.apk)
 apkPath=$TMPDIR/freezeit.apk
 mv -f "$fullApkPath" "$apkPath"
-chmod 666 "$apkPath"
+chmod 666 "$apkPath" 
 
 echo "- 冻它APP 正在安装..."
 output=$(pm install -r -f "$apkPath" 2>&1)

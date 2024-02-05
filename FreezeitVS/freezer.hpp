@@ -38,6 +38,7 @@ private:
 		void* mapped = nullptr;
 		size_t mapSize = 128 * 1024;
 	} bs;
+	int V1Type = 0;
 
 	const char* cgroupV2FreezerCheckPath = "/sys/fs/cgroup/uid_0/cgroup.freeze";
 	const char* cgroupV2frozenCheckPath = "/sys/fs/cgroup/frozen/cgroup.freeze";       // "1" frozen
@@ -50,7 +51,8 @@ private:
 	// const char* cgroupV1UidPath = "/dev/jark_freezer/uid_%d";
 	const char* cgroupV1FrozenPath = "/dev/jark_freezer/frozen/cgroup.procs";
 	const char* cgroupV1UnfrozenPath = "/dev/jark_freezer/unfrozen/cgroup.procs";
-
+	const char* cgroupV1PlusFrozenPath = "/sys/fs/cgroup/freezer/cgroup.procs";
+	const char* cgroupV1PlusUnfrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";
 	// 如果直接使用 uid_xxx/cgroup.freeze 可能导致无法解冻
 	const char* cgroupV2UidPidPath = "/sys/fs/cgroup/uid_%d/pid_%d/cgroup.freeze"; // "1"frozen   "0"unfrozen
 	const char* cgroupV2FrozenPath = "/sys/fs/cgroup/frozen/cgroup.procs";         // write pid
@@ -73,13 +75,13 @@ public:
 		const string modeStrList[] = {
 				"全局SIGSTOP",
 				"FreezerV1 (FROZEN)",
-				"FreezerV1 (FRZ+SIG)",
 				"FreezerV1+ (FROZEN)",
+				"FreezerV1 (FRZ+SIG)",
 				"FreezerV2 (UID)",
 				"FreezerV2 (FROZEN)",
-				"Unknown" };
+				"自动" };
 		const uint32_t idx = static_cast<uint32_t>(mode);
-		return modeStrList[idx <= 5 ? idx : 5];
+		return modeStrList[idx <= 6 ? idx : 6];
 	}
 
 	Freezer(Freezeit& freezeit, Settings& settings, ManagedApp& managedApp,
@@ -119,7 +121,16 @@ public:
 			freezeit.log("不支持自定义Freezer类型 V1(FROZEN) 失败");
 		}
 						   break;
-
+		case WORK_MODE::V1P: {
+			if (mountFreezerV1()) {
+				V1Type = 1;
+				workMode = WORK_MODE::V1P;
+				freezeit.setWorkMode(workModeStr(workMode));
+				freezeit.log("Freezer类型已设为 V1+");
+				return;
+			}
+			freezeit.log("不支持自定义Freezer类型 V1+");
+		}
 							 break;
 		case WORK_MODE::V1F_ST: {
 			if (mountFreezerV1()) {
@@ -153,23 +164,29 @@ public:
 			freezeit.log("不支持自定义Freezer类型 V2(FROZEN)");
 		}
 								break;
+		case WORK_MODE::Auto: {
+			if (checkFreezerV2FROZEN()) {
+				workMode = WORK_MODE::V2FROZEN;
+				freezeit.log("Freezer类型已设为 V2(FROZEN)");
+			}
+			else if (checkFreezerV2UID()) {
+				workMode = WORK_MODE::V2UID;
+				freezeit.log("Freezer类型已设为 V2(UID)");
+			}
+			else if (mountFreezerV1()) {
+				workMode = WORK_MODE::V1F;
+				freezeit.log("Freezer类型已设为 V1(FROZEN)");
+			}
+			else if (checkFreezerV1Plus()) {
+				workMode = WORK_MODE::V1P;
+				freezeit.log("Freezer类型已设为 V1+(Frozen)");
+			}
+			else {
+				workMode = WORK_MODE::GLOBAL_SIGSTOP;
+				freezeit.log("不支持任何Freezer, 已开启 [全局SIGSTOP] 冻结模式");
+			}
 		}
-
-		if (checkFreezerV2FROZEN()) {
-			workMode = WORK_MODE::V2FROZEN;
-			freezeit.log("Freezer类型已设为 V2(FROZEN)");
-		}
-		else if (checkFreezerV2UID()) {
-			workMode = WORK_MODE::V2UID;
-			freezeit.log("Freezer类型已设为 V2(UID)");
-		}
-		else if (mountFreezerV1()) {
-			workMode = WORK_MODE::V1F;
-			freezeit.log("Freezer类型已设为 V1(FROZEN)");
-		}
-		else {
-			workMode = WORK_MODE::GLOBAL_SIGSTOP;
-			freezeit.log("不支持任何Freezer, 已开启 [全局SIGSTOP] 冻结模式");
+							break;
 		}
 		freezeit.setWorkMode(workModeStr(workMode));
 	}
@@ -694,7 +711,9 @@ infoEncrypt()
 	bool checkFreezerV2FROZEN() {
 		return (!access(cgroupV2frozenCheckPath, F_OK) && !access(cgroupV2unfrozenCheckPath, F_OK));
 	}
-
+	bool checkFreezerV1Plus() {
+		return (!access(cgroupV1PlusFrozenPath, F_OK) && !access(cgroupV1PlusUnfrozenPath, F_OK));
+	}
 	void checkAndMountV2() {
 		// https://cs.android.com/android/kernel/superproject/+/common-android12-5.10:common/kernel/cgroup/freezer.c
 
@@ -813,7 +832,12 @@ infoEncrypt()
 				STRNCAT(procStateStr, len, "❄️V2冻结中 %s\n", label.c_str());
 			}
 			else if (!strcmp(readBuff, v1wchan)) {
-				STRNCAT(procStateStr, len, "❄️V1冻结中 %s\n", label.c_str());
+				if (V1Type == 0) {
+					STRNCAT(procStateStr, len, "❄️V1冻结中 %s\n", label.c_str());
+				}
+				else if (V1Type == 1) {
+					STRNCAT(procStateStr, len, "❄️V1+冻结中 %s\n", label.c_str());
+				}
 			}
 			else if (!strcmp(readBuff, SIGSTOPwchan)) {
 				STRNCAT(procStateStr, len, "🧊ST冻结中 %s\n", label.c_str());

@@ -110,7 +110,7 @@ public:
 					clusterBind = 0;
 					isError = true;
 				}
-				if (setMode > 5) {
+				if (setMode > 6) {
 					freezeit.log("冻结模式参数[%d]错误, 已重设为 全局SIGSTOP", static_cast<int>(setMode));
 					setMode = 0;
 					isError = true;
@@ -239,7 +239,7 @@ public:
 			  break;
 
 		case 5: { // setMode 0-5
-			if (5 < val)
+			if (6 < val)
 				return snprintf(replyBuf, REPLY_BUF_SIZE, "冻结模式参数错误, 正常范围:0~5, 欲设为:%d", val);
 		}
 			  break;
