@@ -1,3 +1,6 @@
 .vs
 ARM64
 X64
+.idea
+build
+.cache
